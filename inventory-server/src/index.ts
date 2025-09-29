@@ -1,11 +1,12 @@
 import "dotenv/config";
 import express from "express";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import morgan from "morgan";
 import AuthRouter from "./routes/auth.route.js";
 
 const app = express();
 app.use(express.json());
+
+morgan("dev");
 
 app.get("/", (req, res) => {
   res.send("Hi there");

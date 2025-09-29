@@ -51,7 +51,8 @@ async function main() {
 
   // Fetch category IDs
   const categories = await prisma.category.findMany();
-  const findCat = (name: string) => categories.find((c) => c.name === name)!;
+  const findCat = (name: string) =>
+    categories.find((c: any) => c.name === name)!;
 
   const products = [
     // Sarees
