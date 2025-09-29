@@ -1,4 +1,3 @@
-import { SocialConnections } from "@/components/social-connections";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,13 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Text } from "@/components/ui/text";
 import * as React from "react";
-import { Pressable, type TextInput, View, Alert } from "react-native";
+import { Pressable, TextInput, View, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Feather from "@expo/vector-icons/Feather";
 
 export function SignInForm() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const passwordInputRef = React.useRef<TextInput>(null);
 
@@ -35,9 +36,7 @@ export function SignInForm() {
       setLoading(true);
       const res = await fetch("http://192.168.29.192:3000/api/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
@@ -48,12 +47,9 @@ export function SignInForm() {
         return;
       }
 
-      // ✅ Success
       Alert.alert("Success", "Logged in successfully!");
       console.log("Token:", data.token);
       console.log("User:", data.user);
-
-      // TODO: save token in secure storage (expo-secure-store) or context
     } catch (error) {
       console.error("Login error:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
@@ -75,6 +71,7 @@ export function SignInForm() {
         </CardHeader>
         <CardContent className="gap-6">
           <View className="gap-6">
+            {/* Email Field */}
             <View className="gap-1.5">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -89,20 +86,33 @@ export function SignInForm() {
                 returnKeyType="next"
               />
             </View>
-            <View className="gap-1.5">
-              <View className="flex-row items-center">
-                <Label htmlFor="password">Password</Label>
-              </View>
+
+            {/* Password Field */}
+            <View className="gap-1.5 relative w-full">
+              <Label htmlFor="password">Password</Label>
               <Input
                 ref={passwordInputRef}
                 id="password"
-                secureTextEntry
+                secureTextEntry={!showPassword}
                 onChangeText={setPassword}
                 value={password}
+                className="pr-10" // add padding so text doesn't overlap the icon
                 returnKeyType="send"
                 onSubmitEditing={onSubmit}
               />
+              <Pressable
+                className="absolute right-3 top-[68%] -translate-y-1/2"
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Feather
+                  name={showPassword ? "eye" : "eye-off"}
+                  size={20} // smaller size
+                  color="gray"
+                />
+              </Pressable>
             </View>
+
+            {/* Submit Button */}
             <Button className="w-full" onPress={onSubmit} disabled={loading}>
               <Text>{loading ? "Loading..." : "Continue"}</Text>
             </Button>
