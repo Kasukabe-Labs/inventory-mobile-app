@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Text } from "@/components/ui/text";
 import * as React from "react";
 import { Pressable, type TextInput, View, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export function SignInForm() {
   const [email, setEmail] = React.useState("");
@@ -62,7 +63,7 @@ export function SignInForm() {
   }
 
   return (
-    <View className="gap-6">
+    <SafeAreaView className="min-h-screen w-full justify-center items-center">
       <Card className="border-border/0 sm:border-border shadow-none sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
           <CardTitle className="text-center text-xl sm:text-left">
@@ -108,6 +109,6 @@ export function SignInForm() {
           </View>
         </CardContent>
       </Card>
-    </View>
+    </SafeAreaView>
   );
 }
