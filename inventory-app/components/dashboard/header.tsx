@@ -5,11 +5,14 @@ import Feather from "@expo/vector-icons/Feather";
 import { Button } from "../ui/button";
 import { Text } from "../ui/text";
 import { Badge } from "../ui/badge";
-import { ShieldCheck } from "lucide-react-native";
+import { User } from "lucide-react-native";
 
 import { Icon } from "../ui/icon";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function Header() {
+  const user = useAuthStore((state) => state.user);
+
   return (
     <>
       <View className="absolute top-8 left-0 right-0 z-50 flex-row items-center justify-between px-2 py-6 ">
@@ -30,10 +33,10 @@ export default function Header() {
         </Button>
       </View>
       <View className="flex-row items-center justify-center gap-2">
-        <Text variant={"h1"}>Hi John</Text>
+        <Text variant={"h4"}>Hi {user?.email}</Text>
         <Badge variant="secondary" className="bg-blue-500 dark:bg-blue-600">
-          <Icon as={ShieldCheck} className="text-white" />
-          <Text className="text-white">Admin</Text>
+          <Icon as={User} className="text-white" />
+          <Text className="text-white">{user?.role}</Text>
         </Badge>
       </View>
     </>
