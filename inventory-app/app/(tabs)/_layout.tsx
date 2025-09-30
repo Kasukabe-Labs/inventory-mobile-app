@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 import Feather from "@expo/vector-icons/Feather";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 export default function TabsLayout() {
   return (
@@ -14,6 +15,19 @@ export default function TabsLayout() {
           title: "Dashboard",
           tabBarIcon: ({ size, color }) => (
             <Feather name="home" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="scanner"
+        options={{
+          title: "Scan",
+          tabBarIcon: ({ size, color }) => (
+            <MaterialCommunityIcons
+              name="barcode-scan"
+              size={size}
+              color={color}
+            />
           ),
         }}
       />

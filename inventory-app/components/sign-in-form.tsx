@@ -13,6 +13,7 @@ import * as React from "react";
 import { Pressable, TextInput, View, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
+import { router } from "expo-router";
 
 export function SignInForm() {
   const [email, setEmail] = React.useState("");
@@ -50,6 +51,7 @@ export function SignInForm() {
       Alert.alert("Success", "Logged in successfully!");
       console.log("Token:", data.token);
       console.log("User:", data.user);
+      router.push("/(tabs)/dashboard");
     } catch (error) {
       console.error("Login error:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
