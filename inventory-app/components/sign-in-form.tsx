@@ -58,7 +58,7 @@ export function SignInForm() {
         email: data.user.email,
         role: data.user.role,
       });
-      Alert.alert("Success", "Logged in successfully!");
+      // Alert.alert("Success", "Logged in successfully!");
       router.push("/(tabs)/dashboard");
     } catch (error) {
       console.error("Login error:", error);

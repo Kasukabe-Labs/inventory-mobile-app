@@ -40,11 +40,13 @@
           }
         }
       ],
-      ["expo-camera",
+      [
+        "expo-camera",
         {
-          "cameraPermission": "Allow Inventory app to access your camera"   
+          "cameraPermission": "Allow Inventory app to access your camera"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
