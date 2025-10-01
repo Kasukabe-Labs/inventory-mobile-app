@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import morgan from "morgan";
 import AuthRouter from "./routes/auth.route.js";
+import ProductRouter from "./routes/products.route.js";
 
 const app = express();
 app.use(express.json());
@@ -13,6 +14,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api", AuthRouter);
+app.use("/api/products", ProductRouter);
 
 app.listen(3000, () => {
   console.log("Server started on port:" + 3000);

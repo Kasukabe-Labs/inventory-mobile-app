@@ -1,13 +1,26 @@
 import Header from "@/components/dashboard/header";
 import SearchBar from "@/components/dashboard/searchBar";
-import React from "react";
+import ProductList from "@/components/ProductList";
+import React, { useState } from "react";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Dashboard() {
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = () => {};
+
   return (
-    <SafeAreaView className="min-h-screen w-full justify-center items-center flex bg-black/50">
+    <View className="flex-1 bg-background">
       <Header />
-      <SearchBar />
-    </SafeAreaView>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <SearchBar />
+        <ProductList />
+      </ScrollView>
+    </View>
   );
 }

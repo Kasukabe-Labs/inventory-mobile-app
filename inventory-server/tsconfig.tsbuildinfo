@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/controllers/auth.controller.ts","./src/lib/jwt.ts","./src/lib/prisma.ts","./src/prisma/seed.ts","./src/routes/auth.route.ts"],"version":"5.9.2"}
+{"root":["./src/index.ts","./src/controllers/auth.controller.ts","./src/controllers/products.controller.ts","./src/lib/jwt.ts","./src/lib/prisma.ts","./src/prisma/seed.ts","./src/routes/auth.route.ts","./src/routes/products.route.ts"],"version":"5.9.2"}

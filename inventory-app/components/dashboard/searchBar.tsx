@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import React from "react";
 import { Input } from "../ui/input";
-import { Search, Plus, Filter } from "lucide-react-native";
+import { Search, Plus, Filter, User } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -18,6 +18,8 @@ import type { TriggerRef } from "@rn-primitives/select";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AddProduct } from "./addProductDialog";
+import { useAuthStore } from "@/store/useAuthStore";
+import { Badge } from "../ui/badge";
 
 const fruits = [
   { label: "Apple", value: "apple" },
@@ -28,6 +30,8 @@ const fruits = [
 ];
 
 export default function SearchBar() {
+  const user = useAuthStore((state) => state.user);
+
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("all");
   const selectRef = React.useRef<TriggerRef>(null);
@@ -61,6 +65,33 @@ export default function SearchBar() {
 
   return (
     <View className="flex-col gap-3 px-4 py-3">
+      {/* Greeting + role badge + email, left-aligned */}
+      <View className="mt-32 flex-col items-start gap-1 w-full">
+        <View className="flex-row items-center gap-2">
+          <Text variant={"h1"}>Welcome</Text>
+          {user?.role && (
+            <Badge
+              variant="secondary"
+              className={`mt-1 ${
+                user?.role === "ADMIN"
+                  ? "bg-emerald-500 dark:bg-emerald-600"
+                  : "bg-blue-500 dark:bg-blue-600"
+              }`}
+            >
+              <Icon as={User} className="text-white" />
+              <Text className="text-white">{user?.role}</Text>
+            </Badge>
+          )}
+        </View>
+
+        {/* Email below */}
+        {user?.email && (
+          <Text variant={"muted"} className="mt-1">
+            Your email: {user.email}
+          </Text>
+        )}
+      </View>
+
       {/* Search Input Section */}
       <View className="flex-row items-center gap-2 w-full">
         <View className="flex-1 relative">
@@ -90,7 +121,7 @@ export default function SearchBar() {
             className="w-[180px]"
             onTouchStart={onTouchStart}
           >
-            <SelectValue placeholder="Select a fruit" />
+            <SelectValue placeholder="Select a category" />
           </SelectTrigger>
           <SelectContent insets={contentInsets} className="w-[180px]">
             <SelectGroup>
