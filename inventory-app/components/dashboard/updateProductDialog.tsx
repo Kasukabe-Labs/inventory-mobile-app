@@ -14,42 +14,60 @@ import { Label } from "@/components/ui/label";
 import { Text } from "@/components/ui/text";
 import { View, ScrollView, Alert } from "react-native";
 import { Icon } from "../ui/icon";
-import { Plus } from "lucide-react-native";
-import { useState } from "react";
+import { Pencil } from "lucide-react-native";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.29.192:3000";
 
-interface AddProductProps {
-  onProductAdded?: () => void;
+interface Product {
+  id: string;
+  name: string;
+  sku: string;
+  quantity: number;
+  price: number;
+  imageUrl?: string;
+  barcodeUrl: string;
+  categoryId: string;
 }
 
-export function AddProduct({ onProductAdded }: AddProductProps) {
+interface UpdateProductProps {
+  product: Product;
+  onProductUpdated?: () => void;
+  trigger?: React.ReactNode;
+}
+
+export function UpdateProduct({
+  product,
+  onProductUpdated,
+  trigger,
+}: UpdateProductProps) {
   const user = useAuthStore((state) => state.user);
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
-    sku: "",
-    quantity: "",
-    price: "",
-    imageUrl: "",
-    barcodeUrl: "",
-    categoryId: "",
+    name: product.name,
+    sku: product.sku,
+    quantity: product.quantity.toString(),
+    price: product.price.toString(),
+    imageUrl: product.imageUrl || "",
+    barcodeUrl: product.barcodeUrl,
+    categoryId: product.categoryId,
   });
 
-  const resetForm = () => {
+  // Update form when product changes
+  useEffect(() => {
     setFormData({
-      name: "",
-      sku: "",
-      quantity: "",
-      price: "",
-      imageUrl: "",
-      barcodeUrl: "",
-      categoryId: "",
+      name: product.name,
+      sku: product.sku,
+      quantity: product.quantity.toString(),
+      price: product.price.toString(),
+      imageUrl: product.imageUrl || "",
+      barcodeUrl: product.barcodeUrl,
+      categoryId: product.categoryId,
     });
-  };
+  }, [product]);
 
   const handleSubmit = async () => {
     // Validation
@@ -60,51 +78,49 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
       !formData.barcodeUrl ||
       !formData.categoryId
     ) {
-      Alert.alert(
-        "Error",
-        "Please fill in all required fields (Name, SKU, Price, Barcode URL, Category ID)"
-      );
+      Alert.alert("Error", "Please fill in all required fields");
       return;
     }
 
     setLoading(true);
     try {
       const token = user?.token;
-
       if (!token) {
-        Alert.alert("Error", "You must be logged in to add products");
+        Alert.alert("Error", "You must be logged in to update products");
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/products/add`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          sku: formData.sku,
-          quantity: formData.quantity ? parseInt(formData.quantity) : 0,
-          price: parseFloat(formData.price),
-          imageUrl: formData.imageUrl || undefined,
-          barcodeUrl: formData.barcodeUrl,
-          categoryId: formData.categoryId,
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/api/products/update/${product.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            sku: formData.sku,
+            quantity: parseInt(formData.quantity),
+            price: parseFloat(formData.price),
+            imageUrl: formData.imageUrl || undefined,
+            barcodeUrl: formData.barcodeUrl,
+            categoryId: formData.categoryId,
+          }),
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to add product");
+        throw new Error(data.message || "Failed to update product");
       }
 
-      Alert.alert("Success", "Product added successfully!");
-      resetForm();
+      Alert.alert("Success", "Product updated successfully!");
       setOpen(false);
-      onProductAdded?.();
+      onProductUpdated?.();
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to add product");
+      Alert.alert("Error", error.message || "Failed to update product");
     } finally {
       setLoading(false);
     }
@@ -113,25 +129,27 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="default">
-          <Icon as={Plus} size={18} className="text-primary-foreground" />
-          <Text>Add Product</Text>
-        </Button>
+        {trigger || (
+          <Button variant="outline" size="sm">
+            <Icon as={Pencil} size={16} className="text-foreground" />
+            <Text>Edit</Text>
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Product</DialogTitle>
+          <DialogTitle>Update Product</DialogTitle>
           <DialogDescription>
-            Fill in the product details below. Fields marked with * are
+            Make changes to the product details. Fields marked with * are
             required.
           </DialogDescription>
         </DialogHeader>
         <ScrollView className="max-h-[400px]">
           <View className="grid gap-4 py-4">
             <View className="grid gap-2">
-              <Label htmlFor="name">Product Name *</Label>
+              <Label htmlFor="update-name">Product Name *</Label>
               <Input
-                id="name"
+                id="update-name"
                 placeholder="Enter product name"
                 value={formData.name}
                 onChangeText={(text) =>
@@ -141,19 +159,19 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
             </View>
 
             <View className="grid gap-2">
-              <Label htmlFor="sku">SKU *</Label>
+              <Label htmlFor="update-sku">SKU *</Label>
               <Input
-                id="sku"
-                placeholder="Enter SKU (must be unique)"
+                id="update-sku"
+                placeholder="Enter SKU"
                 value={formData.sku}
                 onChangeText={(text) => setFormData({ ...formData, sku: text })}
               />
             </View>
 
             <View className="grid gap-2">
-              <Label htmlFor="price">Price *</Label>
+              <Label htmlFor="update-price">Price *</Label>
               <Input
-                id="price"
+                id="update-price"
                 placeholder="0.00"
                 keyboardType="decimal-pad"
                 value={formData.price}
@@ -164,9 +182,9 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
             </View>
 
             <View className="grid gap-2">
-              <Label htmlFor="quantity">Quantity</Label>
+              <Label htmlFor="update-quantity">Quantity *</Label>
               <Input
-                id="quantity"
+                id="update-quantity"
                 placeholder="0"
                 keyboardType="number-pad"
                 value={formData.quantity}
@@ -177,9 +195,9 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
             </View>
 
             <View className="grid gap-2">
-              <Label htmlFor="barcodeUrl">Barcode URL *</Label>
+              <Label htmlFor="update-barcodeUrl">Barcode URL *</Label>
               <Input
-                id="barcodeUrl"
+                id="update-barcodeUrl"
                 placeholder="Enter barcode URL"
                 value={formData.barcodeUrl}
                 onChangeText={(text) =>
@@ -189,9 +207,9 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
             </View>
 
             <View className="grid gap-2">
-              <Label htmlFor="imageUrl">Image URL</Label>
+              <Label htmlFor="update-imageUrl">Image URL</Label>
               <Input
-                id="imageUrl"
+                id="update-imageUrl"
                 placeholder="Enter product image URL (optional)"
                 value={formData.imageUrl}
                 onChangeText={(text) =>
@@ -201,9 +219,9 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
             </View>
 
             <View className="grid gap-2">
-              <Label htmlFor="categoryId">Category ID *</Label>
+              <Label htmlFor="update-categoryId">Category ID *</Label>
               <Input
-                id="categoryId"
+                id="update-categoryId"
                 placeholder="Enter category ID"
                 value={formData.categoryId}
                 onChangeText={(text) =>
@@ -220,7 +238,7 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
             </Button>
           </DialogClose>
           <Button onPress={handleSubmit} disabled={loading}>
-            <Text>{loading ? "Adding..." : "Add Product"}</Text>
+            <Text>{loading ? "Updating..." : "Save Changes"}</Text>
           </Button>
         </DialogFooter>
       </DialogContent>

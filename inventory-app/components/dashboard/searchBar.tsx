@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AddProduct } from "./addProductDialog";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Badge } from "../ui/badge";
+import { UpdateProduct } from "./updateProductDialog";
 
 const fruits = [
   { label: "Apple", value: "apple" },

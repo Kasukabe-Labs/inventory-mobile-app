@@ -9,6 +9,7 @@ import {
   Pressable,
 } from "react-native";
 import { Badge } from "./ui/badge";
+import { Link, router } from "expo-router";
 
 interface Category {
   id: string;
@@ -120,7 +121,15 @@ export default function ProductList() {
 
             return (
               <View key={product.id} className="w-1/2 px-2 mb-4">
-                <Pressable className="bg-card rounded-xl border border-border overflow-hidden active:scale-95 h-[270px]">
+                <Pressable
+                  onPress={() =>
+                    router.push({
+                      pathname: "/products/[id]",
+                      params: { id: product.id },
+                    })
+                  }
+                  className="bg-card rounded-xl border border-border overflow-hidden active:scale-95 h-[270px]"
+                >
                   {/* Product Image */}
                   <View className="w-full h-40 bg-muted relative">
                     <Image

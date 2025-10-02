@@ -57,6 +57,7 @@ export function SignInForm() {
         id: data.user.id,
         email: data.user.email,
         role: data.user.role,
+        token: data.token,
       });
       // Alert.alert("Success", "Logged in successfully!");
       router.push("/(tabs)/dashboard");

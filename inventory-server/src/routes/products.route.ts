@@ -3,6 +3,7 @@ import {
   addProduct,
   deleteProduct,
   getAllProducts,
+  getSingleProductByID,
   updateProduct,
 } from "../controllers/products.controller.js";
 import { authenticate } from "../middlewares/verify.middleware.js";
@@ -16,6 +17,7 @@ ProductRouter.get("/get-all", getAllProducts);
 // ✅ Only ADMIN can add products
 ProductRouter.post("/add", authenticate, isAdmin, addProduct);
 
+ProductRouter.get("/get/:id", getSingleProductByID);
 // ✅ Only ADMIN can update products
 ProductRouter.put("/update/:id", authenticate, isAdmin, updateProduct);
 

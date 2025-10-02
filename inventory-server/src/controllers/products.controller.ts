@@ -138,3 +138,49 @@ export async function deleteProduct(req: Request, res: Response) {
       .json({ success: false, message: "Failed to delete product" });
   }
 }
+
+export async function getSingleProductByID(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Product ID is required" });
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        quantity: true,
+        price: true,
+        imageUrl: true,
+        barcodeUrl: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
+
+    return res.status(200).json({ success: true, data: product });
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch product" });
+  }
+}
