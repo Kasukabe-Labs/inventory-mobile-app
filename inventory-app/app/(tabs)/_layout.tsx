@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import Feather from "@expo/vector-icons/Feather";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { PortalHost } from "@rn-primitives/portal";
 
 export default function TabsLayout() {
@@ -28,11 +28,7 @@ export default function TabsLayout() {
           options={{
             title: "Scan",
             tabBarIcon: ({ size, color }) => (
-              <MaterialCommunityIcons
-                name="barcode-scan"
-                size={size}
-                color={color}
-              />
+              <AntDesign name="scan" size={size} color={color} />
             ),
           }}
         />

@@ -20,6 +20,8 @@ import {
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 const { width, height } = Dimensions.get("window");
 const SCAN_AREA_SIZE = width * 0.7;
@@ -59,6 +61,25 @@ export default function Scanner({
     requestCameraPermission();
   }, []);
 
+  // Reset scanner state when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // Reset all states when screen is focused
+      setScanned(false);
+      setLoading(false);
+      setProduct(null);
+      setError(null);
+
+      // Cleanup when screen loses focus
+      return () => {
+        setScanned(false);
+        setLoading(false);
+        setProduct(null);
+        setError(null);
+      };
+    }, [])
+  );
+
   const requestCameraPermission = async () => {
     const { status } = await Camera.requestCameraPermissionsAsync();
     setHasPermission(status === "granted");
@@ -90,6 +111,12 @@ export default function Scanner({
           // Navigate to product page after a short delay
           setTimeout(() => {
             router.push(`/products/${foundProduct.id}`);
+            // Reset states after navigation
+            setTimeout(() => {
+              setProduct(null);
+              setScanned(false);
+              setLoading(false);
+            }, 500);
           }, 1500);
         } else {
           setError("Product not found with this barcode");
@@ -97,6 +124,7 @@ export default function Scanner({
           setTimeout(() => {
             setScanned(false);
             setError(null);
+            setLoading(false);
           }, 2000);
         }
       }
@@ -107,9 +135,10 @@ export default function Scanner({
       setTimeout(() => {
         setScanned(false);
         setError(null);
+        setLoading(false);
       }, 2000);
     } finally {
-      setLoading(false);
+      // Don't set loading to false immediately, let the timeouts handle it
     }
   };
 
@@ -121,6 +150,7 @@ export default function Scanner({
     setScanned(false);
     setProduct(null);
     setError(null);
+    setLoading(false);
   };
 
   if (hasPermission === null) {
@@ -216,6 +246,7 @@ export default function Scanner({
                 </View>
               )}
 
+              {/* Success State */}
               {product && (
                 <View style={styles.resultContainer}>
                   <Icon as={CheckCircle2} size={64} color="#22c55e" />
@@ -225,6 +256,9 @@ export default function Scanner({
                   <Text className="text-white/80 text-sm mt-2 text-center px-4">
                     {product.name}
                   </Text>
+                  <Text className="text-white/60 text-xs mt-2">
+                    Opening product...
+                  </Text>
                 </View>
               )}
 
@@ -232,14 +266,14 @@ export default function Scanner({
               {error && (
                 <View style={styles.resultContainer}>
                   <Icon as={AlertCircle} size={64} color="#ef4444" />
-                  <Text className="text-white text-xl font-bold mt-4 text-center">
+                  <Text className="text-white text-xl font-bold mt-4 text-center px-4">
                     {error}
                   </Text>
                 </View>
               )}
 
               {/* Loading State */}
-              {loading && !product && (
+              {loading && !product && !error && (
                 <View style={styles.resultContainer}>
                   <View className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin" />
                   <Text className="text-white text-lg font-semibold mt-4">
@@ -257,7 +291,7 @@ export default function Scanner({
         </View>
 
         {/* Instructions at Bottom */}
-        {!scanned && !loading && (
+        {!scanned && !loading && !product && !error && (
           <BlurView intensity={80} tint="dark" style={styles.instructions}>
             <Icon as={Scan} size={32} color="white" className="mb-3" />
             <Text className="text-white text-lg font-semibold mb-2">
@@ -270,7 +304,7 @@ export default function Scanner({
         )}
 
         {/* Retry Button */}
-        {scanned && !product && !loading && (
+        {scanned && !product && !loading && error && (
           <View style={styles.retryButton}>
             <Button onPress={resetScanner} variant="default" size="lg">
               <Text className="text-lg">Scan Again</Text>
