@@ -1,10 +1,25 @@
 import { Router } from "express";
-import { ProductController } from "../controllers/products.controller.js";
+import {
+  addProduct,
+  deleteProduct,
+  getAllProducts,
+  updateProduct,
+} from "../controllers/products.controller.js";
+import { authenticate } from "../middlewares/verify.middleware.js";
+import { isAdmin } from "../middlewares/admin.middleware.js";
 
 const ProductRouter = Router();
 
-ProductRouter.get("/get-all", async (req, res) => {
-  ProductController(req, res);
-});
+// ✅ Anyone can view products
+ProductRouter.get("/get-all", getAllProducts);
+
+// ✅ Only ADMIN can add products
+ProductRouter.post("/add", authenticate, isAdmin, addProduct);
+
+// ✅ Only ADMIN can update products
+ProductRouter.put("/update/:id", authenticate, isAdmin, updateProduct);
+
+// ✅ Only ADMIN can delete products
+ProductRouter.delete("/delete/:id", authenticate, isAdmin, deleteProduct);
 
 export default ProductRouter;
