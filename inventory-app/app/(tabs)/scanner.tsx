@@ -26,7 +26,7 @@ import { useCallback } from "react";
 const { width, height } = Dimensions.get("window");
 const SCAN_AREA_SIZE = width * 0.7;
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.29.192:3000";
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 interface Product {
   id: string;

@@ -1,3 +1,4 @@
+import { API_URL } from "@/constants/api";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -38,9 +39,7 @@ const AnalyticsDashboard = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(
-        "http://192.168.29.192:3000/api/products/get-all"
-      );
+      const response = await fetch(`${API_URL}/api/products/get-all`);
       const result = await response.json();
       if (result.success && Array.isArray(result.data)) {
         setProducts(result.data as Product[]);

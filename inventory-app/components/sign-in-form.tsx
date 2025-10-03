@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
 import { useAuthStore } from "@/store/useAuthStore";
+import { API_URL } from "@/constants/api";
 
 export function SignInForm() {
   const setUser = useAuthStore((state) => state.setUser);
@@ -38,7 +39,7 @@ export function SignInForm() {
 
     try {
       setLoading(true);
-      const res = await fetch("http://192.168.29.192:3000/api/login", {
+      const res = await fetch(`${API_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

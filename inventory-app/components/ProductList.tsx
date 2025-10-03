@@ -12,6 +12,7 @@ import { Badge } from "./ui/badge";
 import { Link, router } from "expo-router";
 import SearchBar from "./dashboard/searchBar";
 import { useAuthStore } from "@/store/useAuthStore";
+import { API_URL } from "@/constants/api";
 
 interface Category {
   id: string;
@@ -48,9 +49,7 @@ export default function ProductList() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(
-        "http://192.168.29.192:3000/api/products/get-all"
-      );
+      const response = await fetch(`${API_URL}/api/products/get-all`);
       const data: ApiResponse = await response.json();
 
       if (data.success) {

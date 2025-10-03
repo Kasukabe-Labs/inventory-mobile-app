@@ -17,8 +17,7 @@ import { Icon } from "../ui/icon";
 import { Plus } from "lucide-react-native";
 import { useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.29.192:3000";
+import { API_URL } from "@/constants/api";
 
 interface AddProductProps {
   onProductAdded?: () => void;

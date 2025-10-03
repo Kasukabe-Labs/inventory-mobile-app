@@ -22,8 +22,7 @@ import {
 import { useAuthStore } from "@/store/useAuthStore";
 import { UpdateProduct } from "./dashboard/updateProductDialog";
 import { DeleteProduct } from "./dashboard/deleteProduct";
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.29.192:3000";
+import { API_URL } from "@/constants/api";
 
 interface Product {
   id: string;
