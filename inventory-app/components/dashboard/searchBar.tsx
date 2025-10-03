@@ -82,17 +82,21 @@ export default function SearchBar({
         </Button>
       </View>
 
-      <AddProduct />
+      {user?.role === "ADMIN" && (
+        <>
+          <AddProduct />
 
-      <Button
-        onPress={() =>
-          router.push({
-            pathname: "/analytics",
-          })
-        }
-      >
-        <Text> View Analytics 📊</Text>
-      </Button>
+          <Button
+            onPress={() =>
+              router.push({
+                pathname: "/analytics",
+              })
+            }
+          >
+            <Text> View Analytics 📊</Text>
+          </Button>
+        </>
+      )}
     </View>
   );
 }

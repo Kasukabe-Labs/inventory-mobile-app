@@ -32,15 +32,6 @@ export default function TabsLayout() {
             ),
           }}
         />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: "Profile",
-            tabBarIcon: ({ size, color }) => (
-              <Feather name="user" size={size} color={color} />
-            ),
-          }}
-        />
       </Tabs>
       <PortalHost />
     </>

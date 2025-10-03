@@ -19,7 +19,7 @@ ProductRouter.post("/add", authenticate, isAdmin, addProduct);
 
 ProductRouter.get("/get/:id", getSingleProductByID);
 // ✅ Only ADMIN can update products
-ProductRouter.put("/update/:id", authenticate, isAdmin, updateProduct);
+ProductRouter.put("/update/:id", authenticate, updateProduct);
 
 // ✅ Only ADMIN can delete products
 ProductRouter.delete("/delete/:id", authenticate, isAdmin, deleteProduct);

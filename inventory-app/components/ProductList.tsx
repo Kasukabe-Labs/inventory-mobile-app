@@ -11,6 +11,7 @@ import {
 import { Badge } from "./ui/badge";
 import { Link, router } from "expo-router";
 import SearchBar from "./dashboard/searchBar";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface Category {
   id: string;
@@ -36,6 +37,8 @@ interface ApiResponse {
 }
 
 export default function ProductList() {
+  const user = useAuthStore((state) => state.user);
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

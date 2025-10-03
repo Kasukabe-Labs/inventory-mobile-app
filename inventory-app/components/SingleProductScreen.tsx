@@ -151,19 +151,19 @@ export default function SingleProductScreen() {
             <Icon as={ArrowLeft} size={24} className="text-foreground" />
           </Pressable>
 
-          {isAdmin && (
-            <View className="flex-row gap-2">
-              <UpdateProduct
-                product={product}
-                onProductUpdated={handleProductUpdated}
-              />
+          <View className="flex-row gap-2">
+            <UpdateProduct
+              product={product}
+              onProductUpdated={handleProductUpdated}
+            />
+            {isAdmin && (
               <DeleteProduct
                 productId={product.id}
                 productName={product.name}
                 onProductDeleted={handleProductDeleted}
               />
-            </View>
-          )}
+            )}
+          </View>
         </View>
       </View>
 
