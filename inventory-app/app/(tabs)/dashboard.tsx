@@ -1,25 +1,30 @@
 import Header from "@/components/dashboard/header";
-import SearchBar from "@/components/dashboard/searchBar";
 import ProductList from "@/components/ProductList";
-import React, { useState } from "react";
-import { RefreshControl, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useState } from "react";
+import { ScrollView, RefreshControl } from "react-native";
 
 export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
-  const onRefresh = () => {};
+  const [reloadKey, setReloadKey] = useState(0); // used to force re-render
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    // Increment reloadKey to force re-render
+    setReloadKey((prev) => prev + 1);
+    setRefreshing(false);
+  };
 
   return (
-    <View className="flex-1 bg-background">
+    <ScrollView
+      className="flex-1 bg-background"
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       <Header />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        <ProductList />
-      </ScrollView>
-    </View>
+      {/* Pass reloadKey as key to ProductList to force remount */}
+      <ProductList key={reloadKey} />
+    </ScrollView>
   );
 }

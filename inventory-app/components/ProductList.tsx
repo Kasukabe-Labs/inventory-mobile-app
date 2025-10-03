@@ -106,7 +106,7 @@ export default function ProductList() {
     return (
       <View className="flex-1 bg-background items-center justify-center">
         <ActivityIndicator size="large" color="hsl(var(--primary))" />
-        <Text className="text-muted-foreground mt-4">Loading products...</Text>
+        <Text className="text-primary mt-4">Loading products...</Text>
       </View>
     );
   }
