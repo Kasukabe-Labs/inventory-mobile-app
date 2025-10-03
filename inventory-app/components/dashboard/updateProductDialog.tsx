@@ -28,7 +28,12 @@ interface Product {
   price: number;
   imageUrl?: string;
   barcodeUrl: string;
-  categoryId: string;
+  category: Category;
+}
+
+interface Category {
+  id: string;
+  name: string;
 }
 
 interface UpdateProductProps {
@@ -53,7 +58,7 @@ export function UpdateProduct({
     price: product.price.toString(),
     imageUrl: product.imageUrl || "",
     barcodeUrl: product.barcodeUrl,
-    categoryId: product.categoryId,
+    categoryId: product.category.id,
   });
 
   // Update form when product changes
@@ -65,7 +70,7 @@ export function UpdateProduct({
       price: product.price.toString(),
       imageUrl: product.imageUrl || "",
       barcodeUrl: product.barcodeUrl,
-      categoryId: product.categoryId,
+      categoryId: product.category.id,
     });
   }, [product]);
 

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Badge } from "./ui/badge";
 import { Link, router } from "expo-router";
+import SearchBar from "./dashboard/searchBar";
 
 interface Category {
   id: string;
@@ -39,6 +40,8 @@ export default function ProductList() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
 
   const fetchProducts = async () => {
     try {
@@ -66,6 +69,15 @@ export default function ProductList() {
     fetchProducts();
   }, []);
 
+  // 🔹 Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 500); // wait 500ms after user stops typing
+
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
   const formatPrice = (price: string) => {
     return `₹${parseFloat(price).toLocaleString("en-IN")}`;
   };
@@ -76,6 +88,12 @@ export default function ProductList() {
     if (quantity < 10) return { text: "Low Stock", color: "text-yellow-500" };
     return { text: "In Stock", color: "text-green-500" };
   };
+
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+      product.sku.toLowerCase().includes(debouncedQuery.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -104,105 +122,111 @@ export default function ProductList() {
   }
 
   return (
-    <View className="flex-1 bg-background">
-      {/* Header */}
-      <View className="bg-card px-6 pt-6 border-t border-border pb-4">
-        <Text className="text-foreground text-2xl font-bold">Products</Text>
-        <Text className="text-muted-foreground text-sm mt-1">
-          {products.length} {products.length === 1 ? "item" : "items"} available
-        </Text>
-      </View>
+    <>
+      <SearchBar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onSearch={() => setDebouncedQuery(searchQuery)} // triggers explicit search
+      />
 
-      {/* Product List - Grid Layout */}
-      <View className="flex-1 px-4">
-        <View className="flex-row flex-wrap -mx-2">
-          {products.map((product, index) => {
-            const stockStatus = getStockStatus(product.quantity);
-
-            return (
-              <View key={product.id} className="w-1/2 px-2 mb-4">
-                <Pressable
-                  onPress={() =>
-                    router.push({
-                      pathname: "/products/[id]",
-                      params: { id: product.id },
-                    })
-                  }
-                  className="bg-card rounded-xl border border-border overflow-hidden active:scale-95 h-[270px]"
-                >
-                  {/* Product Image */}
-                  <View className="w-full h-40 bg-muted relative">
-                    <Image
-                      source={{ uri: product.imageUrl }}
-                      className="w-full h-full"
-                      resizeMode="cover"
-                    />
-
-                    {/* Category Badge (Top Left) */}
-                    <View className="absolute top-2 left-2">
-                      <Badge className="rounded-md px-2 py-1 bg-foreground border border-secondary-foreground">
-                        <Text className="text-muted-foreground text-xs">
-                          {product.category.name}
-                        </Text>
-                      </Badge>
-                    </View>
-
-                    {/* Quantity Badge (Top Right) */}
-                    <View className="absolute top-2 right-2">
-                      <Badge
-                        className={`min-w-5 rounded-md px-2 py-1 bg-foreground border border-secondary-foreground`}
-                      >
-                        <Text className="text-muted-foreground text-xs">
-                          {product.quantity}
-                        </Text>
-                      </Badge>
-                    </View>
-                  </View>
-
-                  {/* Product Info */}
-                  <View className="p-3 flex-1 justify-between">
-                    <View>
-                      <Text
-                        className="text-foreground font-semibold text-sm mb-1 h-10"
-                        numberOfLines={2}
-                      >
-                        {product.name}
-                      </Text>
-                    </View>
-
-                    {/* Price left & SKU right (original layout) */}
-                    <View className="flex-row items-center justify-between">
-                      <Text className="text-primary text-base font-bold">
-                        {formatPrice(product.price)}
-                      </Text>
-                      <Badge className="rounded-md px-2 py-1 bg-foreground border border-secondary-foreground">
-                        <Text className="text-muted-foreground text-xs">
-                          {product.sku}
-                        </Text>
-                      </Badge>
-                    </View>
-                  </View>
-                </Pressable>
-              </View>
-            );
-          })}
+      <View className="flex-1 bg-background">
+        {/* Header */}
+        <View className="bg-card px-6 pt-6 border-t border-border pb-4">
+          <Text className="text-foreground text-2xl font-bold">Products</Text>
+          <Text className="text-muted-foreground text-sm mt-1">
+            {filteredProducts.length}{" "}
+            {filteredProducts.length === 1 ? "item" : "items"} available
+          </Text>
         </View>
 
-        {/* Empty State */}
-        {products.length === 0 && (
-          <View className="items-center justify-center py-16">
-            <Text className="text-muted-foreground text-lg">
-              No products found
-            </Text>
-            <Text className="text-muted-foreground text-sm mt-2">
-              Pull down to refresh
-            </Text>
-          </View>
-        )}
+        {/* Product List - Grid Layout */}
+        <View className="flex-1 px-4">
+          <View className="flex-row flex-wrap -mx-2">
+            {filteredProducts.map((product) => {
+              const stockStatus = getStockStatus(product.quantity);
 
-        {/* Bottom Spacing */}
-        <View className="h-6" />
+              return (
+                <View key={product.id} className="w-1/2 px-2 mb-4">
+                  <Pressable
+                    onPress={() =>
+                      router.push({
+                        pathname: "/products/[id]",
+                        params: { id: product.id },
+                      })
+                    }
+                    className="bg-card rounded-xl border border-border overflow-hidden active:scale-95 h-[270px]"
+                  >
+                    {/* Product Image */}
+                    <View className="w-full h-40 bg-muted relative">
+                      <Image
+                        source={{ uri: product.imageUrl }}
+                        className="w-full h-full"
+                        resizeMode="cover"
+                      />
+
+                      {/* Category Badge */}
+                      <View className="absolute top-2 left-2">
+                        <Badge className="rounded-md px-2 py-1 bg-foreground border border-secondary-foreground">
+                          <Text className="text-muted-foreground text-xs">
+                            {product.category.name}
+                          </Text>
+                        </Badge>
+                      </View>
+
+                      {/* Quantity Badge */}
+                      <View className="absolute top-2 right-2">
+                        <Badge className="min-w-5 rounded-md px-2 py-1 bg-foreground border border-secondary-foreground">
+                          <Text className="text-muted-foreground text-xs">
+                            {product.quantity}
+                          </Text>
+                        </Badge>
+                      </View>
+                    </View>
+
+                    {/* Product Info */}
+                    <View className="p-3 flex-1 justify-between">
+                      <View>
+                        <Text
+                          className="text-foreground font-semibold text-sm mb-1 h-10"
+                          numberOfLines={2}
+                        >
+                          {product.name}
+                        </Text>
+                      </View>
+
+                      {/* Price left & SKU right */}
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-primary text-base font-bold">
+                          {formatPrice(product.price)}
+                        </Text>
+                        <Badge className="rounded-md px-2 py-1 bg-foreground border border-secondary-foreground">
+                          <Text className="text-muted-foreground text-xs">
+                            {product.sku}
+                          </Text>
+                        </Badge>
+                      </View>
+                    </View>
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
+
+          {/* Empty State */}
+          {filteredProducts.length === 0 && (
+            <View className="items-center justify-center py-16">
+              <Text className="text-muted-foreground text-lg">
+                No products found
+              </Text>
+              <Text className="text-muted-foreground text-sm mt-2">
+                Try searching with SKU or title
+              </Text>
+            </View>
+          )}
+
+          <View className="h-6" />
+        </View>
       </View>
-    </View>
+    </>
   );
 }

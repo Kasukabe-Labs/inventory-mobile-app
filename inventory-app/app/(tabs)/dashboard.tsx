@@ -18,7 +18,6 @@ export default function Dashboard() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <SearchBar />
         <ProductList />
       </ScrollView>
     </View>

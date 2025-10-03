@@ -114,8 +114,8 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="default">
-          <Icon as={Plus} size={18} className="text-primary-foreground" />
           <Text>Add Product</Text>
+          <Icon as={Plus} size={20} />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">

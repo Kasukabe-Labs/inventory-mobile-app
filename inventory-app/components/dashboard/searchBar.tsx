@@ -1,43 +1,31 @@
 import { View } from "react-native";
 import React from "react";
 import { Input } from "../ui/input";
-import { Search, Plus, Filter, User } from "lucide-react-native";
+import { Search, User } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type { TriggerRef } from "@rn-primitives/select";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AddProduct } from "./addProductDialog";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Badge } from "../ui/badge";
-import { UpdateProduct } from "./updateProductDialog";
+import { router } from "expo-router";
 
-const fruits = [
-  { label: "Apple", value: "apple" },
-  { label: "Banana", value: "banana" },
-  { label: "Blueberry", value: "blueberry" },
-  { label: "Grapes", value: "grapes" },
-  { label: "Pineapple", value: "pineapple" },
-];
+interface SearchBarProps {
+  searchQuery: string;
+  setSearchQuery: (text: string) => void;
+  onSearch: () => void;
+}
 
-export default function SearchBar() {
+export default function SearchBar({
+  searchQuery,
+  setSearchQuery,
+  onSearch,
+}: SearchBarProps) {
   const user = useAuthStore((state) => state.user);
 
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [selectedCategory, setSelectedCategory] = React.useState("all");
-  const selectRef = React.useRef<TriggerRef>(null);
-
-  const ref = React.useRef<TriggerRef>(null);
   const insets = useSafeAreaInsets();
   const contentInsets = {
     top: insets.top,
@@ -49,24 +37,9 @@ export default function SearchBar() {
     right: 12,
   };
 
-  // Workaround for rn-primitives/select not opening on mobile
-  function onTouchStart() {
-    ref.current?.open();
-  }
-
-  function handleSearch() {
-    console.log(
-      "Searching for:",
-      searchQuery,
-      "in category:",
-      selectedCategory
-    );
-    // Add your search logic here
-  }
-
   return (
     <View className="flex-col gap-3 px-4 py-3">
-      {/* Greeting + role badge + email, left-aligned */}
+      {/* Greeting */}
       <View className="mt-32 flex-col items-start gap-1 w-full">
         <View className="flex-row items-center gap-2">
           <Text variant={"h1"}>Welcome</Text>
@@ -85,7 +58,6 @@ export default function SearchBar() {
           )}
         </View>
 
-        {/* Email below */}
         {user?.email && (
           <Text variant={"muted"} className="mt-1">
             Your email: {user.email}
@@ -93,53 +65,34 @@ export default function SearchBar() {
         )}
       </View>
 
-      {/* Search Input Section */}
+      {/* Search Input */}
       <View className="flex-row items-center gap-2 w-full">
         <View className="flex-1 relative">
           <Input
-            placeholder="Search products..."
+            placeholder="Search by SKU or Title..."
             value={searchQuery}
             onChangeText={setSearchQuery}
             className="border border-gray-300 rounded-lg h-12 pl-4 pr-4"
-            onSubmitEditing={handleSearch}
+            onSubmitEditing={onSearch}
             returnKeyType="search"
           />
         </View>
-        <Button className="h-12 px-4 rounded-lg" onPress={handleSearch}>
+        <Button className="h-12 px-4 rounded-lg" onPress={onSearch}>
           <Icon as={Search} size={20} className="text-primary-foreground" />
         </Button>
       </View>
 
-      {/* Action Buttons Section */}
-      <View className="flex-row justify-between items-center gap-2">
-        {/* Add New Product Button */}
-        <AddProduct />
+      <AddProduct />
 
-        {/* Filter by Category Dropdown */}
-        <Select>
-          <SelectTrigger
-            ref={ref}
-            className="w-[180px]"
-            onTouchStart={onTouchStart}
-          >
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent insets={contentInsets} className="w-[180px]">
-            <SelectGroup>
-              <SelectLabel>Fruits</SelectLabel>
-              {fruits.map((fruit) => (
-                <SelectItem
-                  key={fruit.value}
-                  label={fruit.label}
-                  value={fruit.value}
-                >
-                  {fruit.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </View>
+      <Button
+        onPress={() =>
+          router.push({
+            pathname: "/analytics",
+          })
+        }
+      >
+        <Text> View Analytics 📊</Text>
+      </Button>
     </View>
   );
 }
