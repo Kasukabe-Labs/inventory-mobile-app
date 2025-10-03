@@ -8,6 +8,7 @@ import {
 } from "../controllers/products.controller.js";
 import { authenticate } from "../middlewares/verify.middleware.js";
 import { isAdmin } from "../middlewares/admin.middleware.js";
+import { upload } from "../lib/multer.js";
 
 const ProductRouter = Router();
 
@@ -15,11 +16,22 @@ const ProductRouter = Router();
 ProductRouter.get("/get-all", getAllProducts);
 
 // ✅ Only ADMIN can add products
-ProductRouter.post("/add", authenticate, isAdmin, addProduct);
+ProductRouter.post(
+  "/add",
+  authenticate,
+  isAdmin,
+  upload.single("image"),
+  addProduct
+);
 
 ProductRouter.get("/get/:id", getSingleProductByID);
 // ✅ Only ADMIN can update products
-ProductRouter.put("/update/:id", authenticate, updateProduct);
+ProductRouter.put(
+  "/update/:id",
+  authenticate,
+  upload.single("image"),
+  updateProduct
+);
 
 // ✅ Only ADMIN can delete products
 ProductRouter.delete("/delete/:id", authenticate, isAdmin, deleteProduct);

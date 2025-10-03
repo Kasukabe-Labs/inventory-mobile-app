@@ -13,6 +13,7 @@ import { Link, router } from "expo-router";
 import SearchBar from "./dashboard/searchBar";
 import { useAuthStore } from "@/store/useAuthStore";
 import { API_URL } from "@/constants/api";
+import { useCategoryStore } from "@/store/useCategoryStore";
 
 interface Category {
   id: string;
@@ -39,6 +40,7 @@ interface ApiResponse {
 
 export default function ProductList() {
   const user = useAuthStore((state) => state.user);
+  const setCategories = useCategoryStore((state) => state.setCategories);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +56,10 @@ export default function ProductList() {
 
       if (data.success) {
         setProducts(data.data);
+        const uniqueCategories: Category[] = Array.from(
+          new Map(data.data.map((p) => [p.category.id, p.category])).values()
+        );
+        setCategories(uniqueCategories);
         setError(null);
       } else {
         setError("Failed to load products");

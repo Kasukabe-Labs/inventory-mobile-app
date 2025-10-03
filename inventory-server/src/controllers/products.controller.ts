@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
+import { uploadImageToS3 } from "../lib/uploadImage.js";
 
 export async function getAllProducts(req: Request, res: Response) {
   try {
@@ -40,8 +41,7 @@ export async function getAllProducts(req: Request, res: Response) {
 
 export async function addProduct(req: Request, res: Response) {
   try {
-    const { name, sku, quantity, price, imageUrl, barcodeUrl, categoryId } =
-      req.body;
+    const { name, sku, quantity, price, barcodeUrl, categoryId } = req.body;
 
     if (!name || !sku || !price || !barcodeUrl || !categoryId) {
       return res.status(400).json({
@@ -51,13 +51,21 @@ export async function addProduct(req: Request, res: Response) {
       });
     }
 
+    // handle image upload if provided
+    let imageUrl: string | undefined;
+    if (req.file) {
+      imageUrl = await uploadImageToS3(req.file);
+    } else {
+      imageUrl = req.body.imageUrl; // fallback to body if passed
+    }
+
     const product = await prisma.product.create({
       data: {
         name,
         sku,
-        quantity: quantity ?? 0,
+        quantity: parseInt(quantity) ?? 0,
         price,
-        imageUrl,
+        imageUrl: imageUrl ?? null,
         barcodeUrl,
         category: { connect: { id: categoryId } },
       },
@@ -67,7 +75,6 @@ export async function addProduct(req: Request, res: Response) {
   } catch (error: any) {
     console.error("Error creating product:", error);
     if (error.code === "P2002") {
-      // Prisma unique constraint error
       return res
         .status(400)
         .json({ success: false, message: "SKU must be unique" });
@@ -88,15 +95,22 @@ export async function updateProduct(req: Request, res: Response) {
         .json({ success: false, message: "Product ID is required" });
     }
 
-    const { name, sku, quantity, price, imageUrl, barcodeUrl, categoryId } =
-      req.body;
+    const { name, sku, quantity, price, barcodeUrl, categoryId } = req.body;
+
+    // handle image upload if provided
+    let imageUrl: string | undefined;
+    if (req.file) {
+      imageUrl = await uploadImageToS3(req.file);
+    } else {
+      imageUrl = req.body.imageUrl; // keep old or set new manually
+    }
 
     const product = await prisma.product.update({
       where: { id },
       data: {
         name,
         sku,
-        quantity,
+        quantity: parseInt(quantity),
         price,
         imageUrl,
         barcodeUrl,

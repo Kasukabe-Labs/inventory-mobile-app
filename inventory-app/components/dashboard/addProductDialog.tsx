@@ -12,12 +12,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Text } from "@/components/ui/text";
-import { View, ScrollView, Alert } from "react-native";
+import { View, ScrollView, Alert, Pressable } from "react-native";
 import { Icon } from "../ui/icon";
 import { Plus } from "lucide-react-native";
 import { useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { API_URL } from "@/constants/api";
+import { useCategoryStore } from "@/store/useCategoryStore";
+import { ImageUploadField } from "../ImageUploader";
 
 interface AddProductProps {
   onProductAdded?: () => void;
@@ -25,6 +27,7 @@ interface AddProductProps {
 
 export function AddProduct({ onProductAdded }: AddProductProps) {
   const user = useAuthStore((state) => state.user);
+  const categories = useCategoryStore((state) => state.categories);
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -33,10 +36,14 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
     sku: "",
     quantity: "",
     price: "",
-    imageUrl: "",
     barcodeUrl: "",
     categoryId: "",
   });
+  const [imageData, setImageData] = useState<{
+    uri: string;
+    name: string;
+    type: string;
+  } | null>(null);
 
   const resetForm = () => {
     setFormData({
@@ -44,14 +51,13 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
       sku: "",
       quantity: "",
       price: "",
-      imageUrl: "",
       barcodeUrl: "",
       categoryId: "",
     });
+    setImageData(null);
   };
 
   const handleSubmit = async () => {
-    // Validation
     if (
       !formData.name ||
       !formData.sku ||
@@ -61,7 +67,7 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
     ) {
       Alert.alert(
         "Error",
-        "Please fill in all required fields (Name, SKU, Price, Barcode URL, Category ID)"
+        "Please fill in all required fields (Name, SKU, Price, Barcode URL, Category)"
       );
       return;
     }
@@ -69,27 +75,39 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
     setLoading(true);
     try {
       const token = user?.token;
-
       if (!token) {
         Alert.alert("Error", "You must be logged in to add products");
         return;
       }
 
+      // Create FormData for multipart/form-data
+      const formDataToSend = new FormData();
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("sku", formData.sku);
+      formDataToSend.append(
+        "quantity",
+        formData.quantity ? formData.quantity : "0"
+      );
+      formDataToSend.append("price", formData.price);
+      formDataToSend.append("barcodeUrl", formData.barcodeUrl);
+      formDataToSend.append("categoryId", formData.categoryId);
+
+      // Append image if selected
+      if (imageData) {
+        formDataToSend.append("image", {
+          uri: imageData.uri,
+          name: imageData.name,
+          type: imageData.type,
+        } as any);
+      }
+
       const response = await fetch(`${API_URL}/api/products/add`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
+          // Don't set Content-Type - let fetch set it automatically with boundary
         },
-        body: JSON.stringify({
-          name: formData.name,
-          sku: formData.sku,
-          quantity: formData.quantity ? parseInt(formData.quantity) : 0,
-          price: parseFloat(formData.price),
-          imageUrl: formData.imageUrl || undefined,
-          barcodeUrl: formData.barcodeUrl,
-          categoryId: formData.categoryId,
-        }),
+        body: formDataToSend,
       });
 
       const data = await response.json();
@@ -187,28 +205,60 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
               />
             </View>
 
-            <View className="grid gap-2">
-              <Label htmlFor="imageUrl">Image URL</Label>
-              <Input
-                id="imageUrl"
-                placeholder="Enter product image URL (optional)"
-                value={formData.imageUrl}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, imageUrl: text })
-                }
-              />
-            </View>
+            <ImageUploadField
+              label="Product Image"
+              value={imageData?.uri || null}
+              onImageSelected={setImageData}
+            />
 
             <View className="grid gap-2">
-              <Label htmlFor="categoryId">Category ID *</Label>
-              <Input
-                id="categoryId"
-                placeholder="Enter category ID"
-                value={formData.categoryId}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, categoryId: text })
-                }
-              />
+              <Label>Category *</Label>
+              <Text className="mb-1 text-sm text-gray-500">
+                {formData.categoryId
+                  ? categories.find((c) => c.id === formData.categoryId)?.name
+                  : "Select a category"}
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {categories.map((cat) => {
+                  const isSelected = formData.categoryId === cat.id;
+                  return (
+                    <Pressable
+                      key={cat.id}
+                      onPress={() =>
+                        setFormData({ ...formData, categoryId: cat.id })
+                      }
+                      className={`rounded-lg px-4 py-2.5 border-2 ${
+                        isSelected
+                          ? "bg-green-50 border-green-500"
+                          : "bg-gray-50 border-gray-300"
+                      }`}
+                    >
+                      <View className="flex-row items-center gap-2">
+                        <View
+                          className={`w-5 h-5 rounded border-2 items-center justify-center ${
+                            isSelected
+                              ? "bg-green-500 border-green-500"
+                              : "bg-white border-gray-300"
+                          }`}
+                        >
+                          {isSelected && (
+                            <Text className="text-white text-xs font-bold">
+                              ✓
+                            </Text>
+                          )}
+                        </View>
+                        <Text
+                          className={`text-sm font-medium ${
+                            isSelected ? "text-green-700" : "text-gray-700"
+                          }`}
+                        >
+                          {cat.name}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
           </View>
         </ScrollView>

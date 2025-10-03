@@ -12,12 +12,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Text } from "@/components/ui/text";
-import { View, ScrollView, Alert } from "react-native";
+import { View, ScrollView, Alert, Pressable } from "react-native";
 import { Icon } from "../ui/icon";
 import { Pencil } from "lucide-react-native";
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { API_URL } from "@/constants/api";
+import { useCategoryStore } from "@/store/useCategoryStore";
+import { ImageUploadField } from "../ImageUploader";
 
 interface Product {
   id: string;
@@ -47,6 +49,7 @@ export function UpdateProduct({
   trigger,
 }: UpdateProductProps) {
   const user = useAuthStore((state) => state.user);
+  const categories = useCategoryStore((state) => state.categories);
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -55,26 +58,32 @@ export function UpdateProduct({
     sku: product.sku,
     quantity: product.quantity.toString(),
     price: product.price.toString(),
-    imageUrl: product.imageUrl || "",
     barcodeUrl: product.barcodeUrl,
     categoryId: product.category.id,
   });
+  const [imageData, setImageData] = useState<{
+    uri: string;
+    name: string;
+    type: string;
+  } | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState(
+    product.imageUrl || null
+  );
 
-  // Update form when product changes
   useEffect(() => {
     setFormData({
       name: product.name,
       sku: product.sku,
       quantity: product.quantity.toString(),
       price: product.price.toString(),
-      imageUrl: product.imageUrl || "",
       barcodeUrl: product.barcodeUrl,
       categoryId: product.category.id,
     });
+    setExistingImageUrl(product.imageUrl || null);
+    setImageData(null);
   }, [product]);
 
   const handleSubmit = async () => {
-    // Validation
     if (
       !formData.name ||
       !formData.sku ||
@@ -94,23 +103,36 @@ export function UpdateProduct({
         return;
       }
 
+      // Create FormData for multipart/form-data
+      const formDataToSend = new FormData();
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("sku", formData.sku);
+      formDataToSend.append("quantity", formData.quantity);
+      formDataToSend.append("price", formData.price);
+      formDataToSend.append("barcodeUrl", formData.barcodeUrl);
+      formDataToSend.append("categoryId", formData.categoryId);
+
+      // If new image selected, append it
+      if (imageData) {
+        formDataToSend.append("image", {
+          uri: imageData.uri,
+          name: imageData.name,
+          type: imageData.type,
+        } as any);
+      } else if (existingImageUrl) {
+        // Keep existing image URL if no new image
+        formDataToSend.append("imageUrl", existingImageUrl);
+      }
+
       const response = await fetch(
         `${API_URL}/api/products/update/${product.id}`,
         {
           method: "PUT",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            // Don't set Content-Type - let fetch set it automatically with boundary
           },
-          body: JSON.stringify({
-            name: formData.name,
-            sku: formData.sku,
-            quantity: parseInt(formData.quantity),
-            price: parseFloat(formData.price),
-            imageUrl: formData.imageUrl || undefined,
-            barcodeUrl: formData.barcodeUrl,
-            categoryId: formData.categoryId,
-          }),
+          body: formDataToSend,
         }
       );
 
@@ -127,6 +149,15 @@ export function UpdateProduct({
       Alert.alert("Error", error.message || "Failed to update product");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageChange = (
+    newImageData: { uri: string; name: string; type: string } | null
+  ) => {
+    setImageData(newImageData);
+    if (newImageData) {
+      setExistingImageUrl(null); // Clear existing image if new one selected
     }
   };
 
@@ -210,28 +241,60 @@ export function UpdateProduct({
               />
             </View>
 
-            <View className="grid gap-2">
-              <Label htmlFor="update-imageUrl">Image URL</Label>
-              <Input
-                id="update-imageUrl"
-                placeholder="Enter product image URL (optional)"
-                value={formData.imageUrl}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, imageUrl: text })
-                }
-              />
-            </View>
+            <ImageUploadField
+              label="Product Image"
+              value={imageData?.uri || existingImageUrl}
+              onImageSelected={handleImageChange}
+            />
 
             <View className="grid gap-2">
-              <Label htmlFor="update-categoryId">Category ID *</Label>
-              <Input
-                id="update-categoryId"
-                placeholder="Enter category ID"
-                value={formData.categoryId}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, categoryId: text })
-                }
-              />
+              <Label>Category *</Label>
+              <Text className="mb-1 text-sm text-gray-500">
+                {formData.categoryId
+                  ? categories.find((c) => c.id === formData.categoryId)?.name
+                  : "Select a category"}
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {categories.map((cat) => {
+                  const isSelected = formData.categoryId === cat.id;
+                  return (
+                    <Pressable
+                      key={cat.id}
+                      onPress={() =>
+                        setFormData({ ...formData, categoryId: cat.id })
+                      }
+                      className={`rounded-lg px-4 py-2.5 border-2 ${
+                        isSelected
+                          ? "bg-green-50 border-green-500"
+                          : "bg-gray-50 border-gray-300"
+                      }`}
+                    >
+                      <View className="flex-row items-center gap-2">
+                        <View
+                          className={`w-5 h-5 rounded border-2 items-center justify-center ${
+                            isSelected
+                              ? "bg-green-500 border-green-500"
+                              : "bg-white border-gray-300"
+                          }`}
+                        >
+                          {isSelected && (
+                            <Text className="text-white text-xs font-bold">
+                              ✓
+                            </Text>
+                          )}
+                        </View>
+                        <Text
+                          className={`text-sm font-medium ${
+                            isSelected ? "text-green-700" : "text-gray-700"
+                          }`}
+                        >
+                          {cat.name}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
           </View>
         </ScrollView>
