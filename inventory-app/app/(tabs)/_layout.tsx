@@ -9,9 +9,7 @@ export default function TabsLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarStyle: {
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
-          },
+          tabBarStyle: {},
         }}
       >
         <Tabs.Screen

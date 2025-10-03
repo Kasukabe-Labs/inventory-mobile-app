@@ -151,11 +151,11 @@ const AnalyticsDashboard = () => {
 
         {/* Key Metrics - Simple & Clear */}
         <View className="mb-3">
-          <View className="bg-gradient-to-r from-sky-500 to-sky-600 rounded-2xl p-6 mb-3 shadow-lg">
-            <Text className="text-sm font-medium mb-1 text-muted">
+          <View className="rounded-2xl p-6 mb-3">
+            <Text className="text-sm font-medium mb-1 ">
               Total Inventory Value
             </Text>
-            <Text className="text-white text-3xl font-bold">
+            <Text className="text-primary text-3xl font-bold">
               ₹{(totalValue / 1000).toFixed(1)}k 💸
             </Text>
           </View>

@@ -98,6 +98,11 @@ export default function ProductList() {
       product.sku.toLowerCase().includes(debouncedQuery.toLowerCase())
   );
 
+  const resetSearch = () => {
+    setSearchQuery("");
+    setDebouncedQuery("");
+  };
+
   if (loading) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
@@ -129,7 +134,8 @@ export default function ProductList() {
       <SearchBar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        onSearch={() => setDebouncedQuery(searchQuery)} // triggers explicit search
+        onSearch={() => setDebouncedQuery(searchQuery)}
+        resetFilters={resetSearch}
       />
 
       <View className="flex-1 bg-background">
@@ -169,8 +175,8 @@ export default function ProductList() {
 
                       {/* Category Badge */}
                       <View className="absolute top-2 left-2">
-                        <Badge className="rounded-md px-2 py-1 bg-foreground border border-secondary-foreground">
-                          <Text className="text-muted-foreground text-xs">
+                        <Badge className="rounded-md px-2 py-1 bg-[#93dafd] border border-[#759dca]">
+                          <Text className="text-primary text-xs">
                             {product.category.name}
                           </Text>
                         </Badge>
@@ -178,8 +184,8 @@ export default function ProductList() {
 
                       {/* Quantity Badge */}
                       <View className="absolute top-2 right-2">
-                        <Badge className="min-w-5 rounded-md px-2 py-1 bg-foreground border border-secondary-foreground">
-                          <Text className="text-muted-foreground text-xs">
+                        <Badge className="min-w-5 rounded-md px-2 py-1 bg-blue-300 border border-blue-400">
+                          <Text className="text-primary text-xs">
                             {product.quantity}
                           </Text>
                         </Badge>
@@ -202,8 +208,8 @@ export default function ProductList() {
                         <Text className="text-primary text-base font-bold">
                           {formatPrice(product.price)}
                         </Text>
-                        <Badge className="rounded-md px-2 py-1 bg-foreground border border-secondary-foreground">
-                          <Text className="text-muted-foreground text-xs">
+                        <Badge className="rounded-md px-2 py-1 bg-[#a2fd93] border border-[#81ca75]">
+                          <Text className="text-primary text-xs">
                             {product.sku}
                           </Text>
                         </Badge>

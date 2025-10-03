@@ -4,7 +4,7 @@ import { SignInForm } from "@/components/sign-in-form";
 
 export default function index() {
   return (
-    <View className="flex-1 bg-black">
+    <View className="flex-1 bg-background">
       <SignInForm />
     </View>
   );

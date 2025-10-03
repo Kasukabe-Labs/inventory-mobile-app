@@ -113,7 +113,7 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="default">
+        <Button>
           <Text>Add Product</Text>
           <Icon as={Plus} size={20} />
         </Button>

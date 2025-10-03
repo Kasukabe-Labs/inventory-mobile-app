@@ -1,11 +1,11 @@
-import { View } from "react-native";
-import React from "react";
+import { Animated, View } from "react-native";
+import React, { useRef } from "react";
 import { Input } from "../ui/input";
-import { Search, User } from "lucide-react-native";
+import { User } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import type { TriggerRef } from "@rn-primitives/select";
+import Feather from "@expo/vector-icons/Feather";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AddProduct } from "./addProductDialog";
@@ -17,25 +17,45 @@ interface SearchBarProps {
   searchQuery: string;
   setSearchQuery: (text: string) => void;
   onSearch: () => void;
+  resetFilters: () => void;
 }
 
 export default function SearchBar({
   searchQuery,
   setSearchQuery,
   onSearch,
+  resetFilters,
 }: SearchBarProps) {
   const user = useAuthStore((state) => state.user);
 
   const insets = useSafeAreaInsets();
-  const contentInsets = {
-    top: insets.top,
-    bottom: Platform.select({
-      ios: insets.bottom,
-      android: insets.bottom + 24,
-    }),
-    left: 12,
-    right: 12,
+
+  const rotation = useRef(new Animated.Value(0)).current;
+
+  const handlePress = () => {
+    // Run reset logic
+    resetFilters();
+
+    // Trigger rotation animation
+    Animated.sequence([
+      Animated.timing(rotation, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rotation, {
+        toValue: 0,
+        duration: 0,
+        useNativeDriver: true,
+      }),
+    ]).start();
   };
+
+  // Map rotation value to degrees
+  const rotate = rotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
 
   return (
     <View className="flex-col gap-3 px-4 py-3">
@@ -77,8 +97,14 @@ export default function SearchBar({
             returnKeyType="search"
           />
         </View>
-        <Button className="h-12 px-4 rounded-lg" onPress={onSearch}>
-          <Icon as={Search} size={20} className="text-primary-foreground" />
+        <Button
+          variant={"outline"}
+          className="h-12 px-4 rounded-lg"
+          onPress={handlePress}
+        >
+          <Animated.View style={{ transform: [{ rotate }] }}>
+            <Feather name="refresh-cw" size={20} className="text-primary" />
+          </Animated.View>
         </Button>
       </View>
 
@@ -87,6 +113,7 @@ export default function SearchBar({
           <AddProduct />
 
           <Button
+            variant={"secondary"}
             onPress={() =>
               router.push({
                 pathname: "/analytics",
