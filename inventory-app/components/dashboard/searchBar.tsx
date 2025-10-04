@@ -96,56 +96,68 @@ export default function SearchBar({
           />
         </View>
         <Button
-          variant={"outline"}
+          variant={"secondary"}
           className="h-12 px-4 rounded-lg"
-          onPress={handlePress}
+          onPress={onSearch}
         >
-          <Animated.View style={{ transform: [{ rotate }] }}>
-            <Feather name="refresh-cw" size={20} color={"#27CFF5"} />
-          </Animated.View>
+          <Feather name="search" size={20} color={"black"} />
         </Button>
       </View>
 
       {user?.role === "ADMIN" && (
-        <View className="flex-row gap-2">
-          <Select
-            value={
-              selectedCategoryId
-                ? {
-                    value: selectedCategoryId,
-                    label:
-                      categories.find((c) => c.id === selectedCategoryId)
-                        ?.name || "",
-                  }
-                : { value: "", label: "All Categories" }
-            }
-            onValueChange={(val) => {
-              if (val?.value) {
-                setSelectedCategoryId(val.value);
-              } else {
-                setSelectedCategoryId(null);
+        <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+          {/* wrapper that will take remaining width */}
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Select
+              value={
+                selectedCategoryId
+                  ? {
+                      value: selectedCategoryId,
+                      label:
+                        categories.find((c) => c.id === selectedCategoryId)
+                          ?.name || "",
+                    }
+                  : { value: "", label: "All Categories" }
               }
-            }}
-          >
-            <SelectTrigger className="h-12 bg-background rounded-lg px-3">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Categories</SelectLabel>
-                <SelectItem key="all" value="" label="All Categories">
-                  All Categories
-                </SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id} label={cat.name}>
-                    {cat.name}
+              onValueChange={(val) => {
+                if (val?.value) setSelectedCategoryId(val.value);
+                else setSelectedCategoryId(null);
+              }}
+            >
+              {/* Make trigger stretch to fill wrapper */}
+              <SelectTrigger
+                style={{ height: 48, flex: 1, justifyContent: "center" }}
+              >
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Categories</SelectLabel>
+                  <SelectItem key="all" value="" label="All Categories">
+                    All Categories
                   </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id} label={cat.name}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </View>
 
           <AddProduct />
+
+          <Button
+            variant="secondary"
+            style={{ height: 48, paddingHorizontal: 12, borderRadius: 8 }}
+            onPress={handlePress}
+          >
+            <Animated.View style={{ transform: [{ rotate }] }}>
+              <Feather name="refresh-cw" size={20} color={"black"} />
+            </Animated.View>
+          </Button>
         </View>
       )}
     </View>

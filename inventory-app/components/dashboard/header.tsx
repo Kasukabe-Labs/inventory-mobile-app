@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import { Text } from "../ui/text";
 import { useAuthStore } from "@/store/useAuthStore";
 import { router } from "expo-router";
+import { Badge } from "../ui/badge";
 
 export default function Header() {
   const user = useAuthStore((state) => state.user);
@@ -32,14 +33,19 @@ export default function Header() {
             </AvatarFallback>
           </Avatar>
           <View className="flex justify-center items-start">
-            <Text variant={"large"}>Welcome</Text>
+            <View className=" flex-row justify-center items-center gap-1">
+              <Text variant={"large"}>Welcome</Text>
+              <Badge>
+                <Text>{user?.role}</Text>
+              </Badge>
+            </View>
             <Text variant={"small"}>{user?.email}</Text>
           </View>
         </View>
 
         <View className="flex flex-row justify-center items-center gap-2">
-          <Button variant="secondary" size="icon">
-            <MaterialIcons name="settings" size={15} color="black" />{" "}
+          <Button size="icon">
+            <MaterialIcons name="settings" size={15} color="white" />{" "}
           </Button>
           <Button onPress={logoutUser} variant="destructive" size="icon">
             <MaterialIcons name="logout" size={15} color="white" />{" "}

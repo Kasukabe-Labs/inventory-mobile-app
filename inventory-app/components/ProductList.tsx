@@ -158,20 +158,16 @@ export default function ProductList() {
         {/* Header */}
         <View className="bg-card px-6 pt-6 border-t border-border pb-4">
           <Text className="text-foreground text-2xl font-bold">Products</Text>
-          <Text className="text-muted-foreground text-sm mt-1">
-            {filteredProducts.length}{" "}
-            {filteredProducts.length === 1 ? "item" : "items"} available
-          </Text>
         </View>
 
         {/* Product List - Grid Layout */}
-        <View className="flex-1 px-4">
-          <View className="flex-row flex-wrap -mx-2">
+        <View className="flex-1 px-3">
+          <View className="flex-row flex-wrap -mx-1.5">
             {filteredProducts.map((product) => {
               const stockStatus = getStockStatus(product.quantity);
 
               return (
-                <View key={product.id} className="w-1/2 px-2 mb-4">
+                <View key={product.id} className="w-1/2 px-1.5 mb-3">
                   <Pressable
                     onPress={() =>
                       router.push({
@@ -179,10 +175,10 @@ export default function ProductList() {
                         params: { id: product.id },
                       })
                     }
-                    className="bg-card rounded-xl border border-border overflow-hidden active:scale-95 h-[270px]"
+                    className="bg-card rounded-2xl border border-border overflow-hidden active:opacity-80"
                   >
                     {/* Product Image */}
-                    <View className="w-full h-40 bg-muted relative">
+                    <View className="w-full aspect-square bg-muted relative">
                       <Image
                         source={{ uri: product.imageUrl }}
                         className="w-full h-full"
@@ -191,8 +187,11 @@ export default function ProductList() {
 
                       {/* Category Badge */}
                       <View className="absolute top-2 left-2">
-                        <Badge className="rounded-md px-2 py-1 bg-[#93dafd] border border-[#759dca]">
-                          <Text className="text-primary text-xs">
+                        <Badge
+                          variant="secondary"
+                          className="rounded-md px-2 py-1"
+                        >
+                          <Text className="text-xs font-medium">
                             {product.category.name}
                           </Text>
                         </Badge>
@@ -200,33 +199,38 @@ export default function ProductList() {
 
                       {/* Quantity Badge */}
                       <View className="absolute top-2 right-2">
-                        <Badge className="min-w-5 rounded-md px-2 py-1 bg-blue-300 border border-blue-400">
-                          <Text className="text-primary text-xs">
-                            {product.quantity}
+                        <Badge
+                          variant="secondary"
+                          className="rounded-md px-2 py-1"
+                        >
+                          <Text className="text-xs font-medium">
+                            {product.category.name}
                           </Text>
                         </Badge>
                       </View>
                     </View>
 
                     {/* Product Info */}
-                    <View className="p-3 flex-1 justify-between">
-                      <View>
-                        <Text
-                          className="text-foreground font-semibold text-sm mb-1 h-10"
-                          numberOfLines={2}
-                        >
-                          {product.name}
-                        </Text>
-                      </View>
+                    <View className="p-3">
+                      <Text
+                        className="text-foreground font-semibold text-sm leading-5 mb-2"
+                        numberOfLines={2}
+                        style={{ minHeight: 40 }}
+                      >
+                        {product.name}
+                      </Text>
 
                       {/* Price left & SKU right */}
-                      <View className="flex-row items-center justify-between">
-                        <Text className="text-primary text-base font-bold">
+                      <View className="flex-row items-center justify-between gap-2">
+                        <Text className="text-foreground text-base font-bold flex-shrink">
                           {formatPrice(product.price)}
                         </Text>
-                        <Badge className="rounded-md px-2 py-1 bg-[#a2fd93] border border-[#81ca75]">
-                          <Text className="text-primary text-xs">
-                            {product.sku}
+                        <Badge
+                          variant="secondary"
+                          className="rounded-md px-2 py-1"
+                        >
+                          <Text className="text-xs font-medium">
+                            {product.category.name}
                           </Text>
                         </Badge>
                       </View>

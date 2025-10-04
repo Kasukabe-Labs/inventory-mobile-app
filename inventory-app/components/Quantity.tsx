@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Alert,
+  StyleSheet,
+  useColorScheme,
+} from "react-native";
 import {
   Dialog,
   DialogTrigger,
@@ -13,6 +20,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { API_URL } from "@/constants/api";
 import { useAuthStore } from "@/store/useAuthStore";
+import { Edit3Icon } from "lucide-react-native";
+import { Icon } from "./ui/icon";
 
 interface QuantityDialogProps {
   productId: string;
@@ -26,6 +35,9 @@ export default function QuantityDialog({
   onQuantityUpdated,
 }: QuantityDialogProps) {
   const user = useAuthStore((state) => state.user);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
   const [amount, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -77,57 +89,193 @@ export default function QuantityDialog({
     setIsOpen(false);
   };
 
+  const styles = StyleSheet.create({
+    content: {
+      width: 400,
+      maxWidth: 400,
+    },
+    header: {
+      marginBottom: 8,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: "600",
+      color: isDark ? "#ffffff" : "#000000",
+    },
+    description: {
+      fontSize: 15,
+      marginTop: 8,
+      color: isDark ? "#a1a1aa" : "#71717a",
+    },
+    currentStock: {
+      fontWeight: "700",
+      color: "#3b82f6",
+    },
+    body: {
+      paddingVertical: 16,
+      gap: 16,
+    },
+    inputContainer: {
+      gap: 8,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: "500",
+      color: isDark ? "#ffffff" : "#000000",
+    },
+    input: {
+      borderWidth: 2,
+      borderColor: isDark ? "#3f3f46" : "#e4e4e7",
+      backgroundColor: isDark ? "#18181b" : "#ffffff",
+      color: isDark ? "#ffffff" : "#000000",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 8,
+      fontSize: 18,
+      fontWeight: "600",
+      textAlign: "center",
+    },
+    buttonRow: {
+      flexDirection: "row",
+      gap: 12,
+      marginTop: 8,
+    },
+    increaseButton: {
+      flex: 1,
+      backgroundColor: "#16a34a",
+      paddingVertical: 14,
+      borderRadius: 8,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    increaseButtonDisabled: {
+      opacity: 0.5,
+    },
+    decreaseButton: {
+      flex: 1,
+      backgroundColor: "#dc2626",
+      paddingVertical: 14,
+      borderRadius: 8,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    decreaseButtonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      color: "#ffffff",
+      fontSize: 15,
+      fontWeight: "700",
+    },
+    preview: {
+      backgroundColor: isDark ? "#27272a" : "#f4f4f5",
+      borderRadius: 8,
+      padding: 12,
+      marginTop: 8,
+      height: 60,
+      justifyContent: "center",
+    },
+    previewText: {
+      fontSize: 14,
+      color: isDark ? "#a1a1aa" : "#71717a",
+      textAlign: "left",
+      lineHeight: 20,
+      flexShrink: 1,
+    },
+    previewBold: {
+      fontWeight: "700",
+      color: isDark ? "#ffffff" : "#000000",
+    },
+    footer: {
+      marginTop: 8,
+    },
+    cancelButton: {
+      width: "100%",
+      paddingVertical: 12,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: isDark ? "#3f3f46" : "#e4e4e7",
+      backgroundColor: "transparent",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    cancelButtonText: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: isDark ? "#ffffff" : "#000000",
+    },
+    triggerButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: "#3b82f6",
+      borderRadius: 6,
+    },
+    triggerButtonText: {
+      color: "#ffffff",
+      fontSize: 14,
+      fontWeight: "600",
+    },
+  });
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="flex-1 bg-green-500 text-primary">
-          <Text className="text-xs font-semibold">Update Quantity</Text>
+        <Button size="sm" style={styles.triggerButton}>
+          <Icon as={Edit3Icon} size={16} color={"white"} />
+          <Text style={styles.triggerButtonText}>Update Quantity</Text>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader className="mb-2">
-          <DialogTitle className="text-xl">Update Quantity</DialogTitle>
-          <DialogDescription className="text-base mt-2">
+      <DialogContent style={styles.content}>
+        <DialogHeader style={styles.header} className="p-4">
+          <DialogTitle style={styles.title}>Update Quantity</DialogTitle>
+          <DialogDescription style={styles.description}>
             Current stock:{" "}
-            <Text className="font-bold text-primary">{currentQuantity}</Text>{" "}
-            units
+            <Text style={styles.currentStock}>{currentQuantity}</Text> units
           </DialogDescription>
         </DialogHeader>
 
-        <View className="flex flex-col gap-4 py-4">
+        <View style={styles.body} className="p-4">
           {/* Amount Input */}
-          <View className="flex flex-col gap-2">
-            <Text className="text-sm font-medium text-foreground">
-              Enter Amount
-            </Text>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Enter Amount</Text>
             <TextInput
               keyboardType="numeric"
               value={amount}
               onChangeText={setAmount}
               placeholder="0"
-              className="border-2 border-border bg-background text-foreground px-4 py-3 rounded-lg text-lg font-semibold text-center"
-              placeholderTextColor="#888"
+              style={styles.input}
+              placeholderTextColor={isDark ? "#71717a" : "#a1a1aa"}
             />
           </View>
 
           {/* Action Buttons */}
-          <View className="flex flex-row gap-3 mt-2">
+          <View style={styles.buttonRow}>
             <Button
               onPress={() => updateQuantity("increase")}
               disabled={loading || !amount || parseInt(amount) <= 0}
-              className="flex-1 bg-green-600 active:bg-green-700"
+              style={[
+                styles.increaseButton,
+                (loading || !amount || parseInt(amount) <= 0) &&
+                  styles.increaseButtonDisabled,
+              ]}
             >
-              <Text className="text-primary font-bold ">
+              <Text style={styles.buttonText}>
                 {loading ? "..." : "+ Increase"}
               </Text>
             </Button>
             <Button
               onPress={() => updateQuantity("decrease")}
               disabled={loading || !amount || parseInt(amount) <= 0}
-              variant="destructive"
-              className="flex-1 "
+              style={[
+                styles.decreaseButton,
+                (loading || !amount || parseInt(amount) <= 0) &&
+                  styles.decreaseButtonDisabled,
+              ]}
             >
-              <Text className="text-primary font-bold ">
+              <Text style={styles.buttonText}>
                 {loading ? "..." : "- Decrease"}
               </Text>
             </Button>
@@ -135,14 +283,14 @@ export default function QuantityDialog({
 
           {/* Preview */}
           {amount && parseInt(amount) > 0 && (
-            <View className="bg-muted rounded-lg p-3 mt-2 min-h-[60px]">
-              <Text className="text-sm text-muted-foreground text-center">
+            <View style={styles.preview}>
+              <Text style={styles.previewText}>
                 New quantity will be:{" "}
-                <Text className="font-bold text-foreground">
+                <Text style={styles.previewBold}>
                   {currentQuantity + parseInt(amount)}
                 </Text>{" "}
                 (increase) or{" "}
-                <Text className="font-bold text-foreground">
+                <Text style={styles.previewBold}>
                   {Math.max(0, currentQuantity - parseInt(amount))}
                 </Text>{" "}
                 (decrease)
@@ -151,10 +299,14 @@ export default function QuantityDialog({
           )}
         </View>
 
-        <DialogFooter className="mt-2">
+        <DialogFooter style={styles.footer}>
           <DialogClose asChild>
-            <Button variant="outline" onPress={handleClose} className="w-full">
-              <Text className="font-semibold">Cancel</Text>
+            <Button
+              variant="outline"
+              onPress={handleClose}
+              style={styles.cancelButton}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
             </Button>
           </DialogClose>
         </DialogFooter>

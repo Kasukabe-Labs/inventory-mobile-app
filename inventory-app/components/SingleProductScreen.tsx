@@ -162,14 +162,6 @@ export default function SingleProductScreen() {
           </Pressable>
 
           <View className="flex-row gap-2">
-            <QuantityDialog
-              currentQuantity={product.quantity}
-              productId={product.id}
-              onQuantityUpdated={(newQuantity) =>
-                handleQuantityUpdate(product.id, newQuantity)
-              }
-            />
-
             {isAdmin && (
               <>
                 <UpdateProduct
@@ -194,7 +186,7 @@ export default function SingleProductScreen() {
         }
       >
         {/* Product Image */}
-        <View className="w-full h-[400px] bg-muted relative">
+        <View className="w-full aspect-square bg-muted relative">
           <Image
             source={{
               uri: product.imageUrl || "https://via.placeholder.com/400",
@@ -205,8 +197,11 @@ export default function SingleProductScreen() {
 
           {/* Category Badge (Top Left) */}
           <View className="absolute top-4 left-4">
-            <Badge className="rounded-lg px-3 py-2 bg-card/90 backdrop-blur border border-border shadow-lg">
-              <Text className="text-foreground text-sm font-medium">
+            <Badge
+              variant="secondary"
+              className="rounded-lg px-3 py-2 shadow-sm"
+            >
+              <Text className="text-sm font-medium">
                 {product.category.name}
               </Text>
             </Badge>
@@ -215,15 +210,10 @@ export default function SingleProductScreen() {
           {/* Quantity Badge (Top Right) */}
           <View className="absolute top-4 right-4">
             <Badge
-              className={`rounded-lg px-3 py-2 backdrop-blur border shadow-lg ${
-                product.quantity > 50
-                  ? "bg-green-500/90 border-green-600"
-                  : product.quantity > 10
-                    ? "bg-yellow-500/90 border-yellow-600"
-                    : "bg-red-500/90 border-red-600"
-              }`}
+              variant="secondary"
+              className="rounded-lg px-3 py-2 shadow-sm"
             >
-              <Text className="text-white text-sm font-bold">
+              <Text className="text-sm font-semibold">
                 {product.quantity} in stock
               </Text>
             </Badge>
@@ -231,16 +221,17 @@ export default function SingleProductScreen() {
         </View>
 
         {/* Product Details */}
-        <View className="p-6">
+        <View className="px-5 py-6">
           {/* Product Name & Price */}
-          <View className="mb-6">
-            <Text className="text-foreground text-3xl font-bold mb-3">
+          <View className="mb-8">
+            <Text className="text-foreground text-2xl font-bold mb-3 leading-7">
               {product.name}
             </Text>
 
-            <Text className="text-primary text-4xl font-extrabold">
+            <Text className="text-foreground text-3xl font-bold mb-4">
               {formatPrice(product.price)}
             </Text>
+
             <QuantityDialog
               currentQuantity={product.quantity}
               productId={product.id}
@@ -249,80 +240,44 @@ export default function SingleProductScreen() {
               }
             />
           </View>
+
           {/* Info Cards */}
-          <View className="gap-4 mb-6">
+          <View className="gap-3 mb-6">
             {/* SKU Card */}
             <View className="bg-card rounded-xl border border-border p-4">
               <View className="flex-row items-center mb-2">
                 <Icon
                   as={Tag}
-                  size={20}
+                  size={18}
                   className="text-muted-foreground mr-2"
                 />
-                <Text className="text-muted-foreground text-sm font-medium">
+                <Text className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                   SKU
                 </Text>
               </View>
-              <Text className="text-foreground text-lg font-semibold">
+              <Text className="text-foreground text-base font-semibold">
                 {product.sku}
               </Text>
             </View>
 
-            {/* Barcode Card */}
+            {/* Stock Status Card */}
             <View className="bg-card rounded-xl border border-border p-4">
               <View className="flex-row items-center mb-3">
                 <Icon
-                  as={Barcode}
-                  size={20}
-                  className="text-muted-foreground mr-2"
-                />
-                <Text className="text-muted-foreground text-sm font-medium">
-                  Barcode
-                </Text>
-              </View>
-              <View className="bg-white rounded-lg p-3 items-center">
-                <Image
-                  source={{ uri: product.barcodeUrl }}
-                  className="w-full h-24"
-                  resizeMode="contain"
-                />
-              </View>
-            </View>
-
-            {/* Stock Status Card */}
-            <View className="bg-card rounded-xl border border-border p-4">
-              <View className="flex-row items-center mb-2">
-                <Icon
                   as={Package}
-                  size={20}
+                  size={18}
                   className="text-muted-foreground mr-2"
                 />
-                <Text className="text-muted-foreground text-sm font-medium">
+                <Text className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                   Stock Status
                 </Text>
               </View>
               <View className="flex-row items-center justify-between">
-                <Text className="text-foreground text-lg font-semibold">
-                  {product.quantity} units available
+                <Text className="text-foreground text-base font-semibold">
+                  {product.quantity} units
                 </Text>
-                <Badge
-                  className={`rounded-md px-3 py-1 ${
-                    product.quantity > 50
-                      ? "bg-green-500/20 border-green-500"
-                      : product.quantity > 10
-                        ? "bg-yellow-500/20 border-yellow-500"
-                        : "bg-red-500/20 border-red-500"
-                  }`}
-                >
-                  <Text
-                    className={`text-sm font-semibold ${
-                      product.quantity > 50
-                        ? "text-green-700"
-                        : product.quantity > 10
-                          ? "text-yellow-700"
-                          : "text-red-700"
-                    }`}
-                  >
+                <Badge variant="secondary" className="rounded-md px-3 py-1.5">
+                  <Text className="text-xs font-semibold">
                     {product.quantity > 50
                       ? "In Stock"
                       : product.quantity > 10
@@ -333,34 +288,28 @@ export default function SingleProductScreen() {
               </View>
             </View>
 
-            {/* Timestamps Card */}
+            {/* Barcode Card */}
             <View className="bg-card rounded-xl border border-border p-4">
               <View className="flex-row items-center mb-3">
                 <Icon
-                  as={Calendar}
-                  size={20}
+                  as={Barcode}
+                  size={18}
                   className="text-muted-foreground mr-2"
                 />
-                <Text className="text-muted-foreground text-sm font-medium">
-                  Product Information
+                <Text className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                  Barcode
                 </Text>
               </View>
-              <View className="gap-2">
-                <View className="flex-row justify-between">
-                  <Text className="text-muted-foreground">Created</Text>
-                  <Text className="text-foreground font-medium">
-                    {formatDate(product.createdAt)}
-                  </Text>
-                </View>
-                <View className="flex-row justify-between">
-                  <Text className="text-muted-foreground">Last Updated</Text>
-                  <Text className="text-foreground font-medium">
-                    {formatDate(product.updatedAt)}
-                  </Text>
-                </View>
+              <View className="bg-muted rounded-lg p-4 items-center">
+                <Image
+                  source={{ uri: product.barcodeUrl }}
+                  className="w-full h-20"
+                  resizeMode="contain"
+                />
               </View>
             </View>
           </View>
+
           {/* Bottom Spacing */}
           <View className="h-8" />
         </View>

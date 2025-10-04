@@ -76,11 +76,7 @@ export function DeleteProduct({
       <AlertDialogTrigger asChild>
         {trigger || (
           <Button variant="destructive" size="sm">
-            <Icon
-              as={Trash2}
-              size={16}
-              className="text-destructive-foreground"
-            />
+            <Icon as={Trash2} size={16} color={"white"} />
             <Text>Delete</Text>
           </Button>
         )}

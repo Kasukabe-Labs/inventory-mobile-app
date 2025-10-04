@@ -3,16 +3,23 @@ import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { PortalHost } from "@rn-primitives/portal";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useColorScheme } from "react-native";
 
 export default function TabsLayout() {
   const user = useAuthStore((state) => state.user);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   return (
     <>
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarStyle: {},
+          tabBarStyle: {
+            backgroundColor: isDark ? "#000000" : "#ffffff",
+          },
+          tabBarActiveTintColor: isDark ? "#ffffff" : "#000000",
+          tabBarInactiveTintColor: isDark ? "#71717a" : "#a1a1aa",
         }}
       >
         <Tabs.Screen

@@ -9,18 +9,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Text } from "@/components/ui/text";
-import { View, ScrollView, Alert, Pressable } from "react-native";
+import { View, ScrollView, Alert } from "react-native";
 import { Icon } from "../ui/icon";
-import { Pencil } from "lucide-react-native";
+import { Edit2 } from "lucide-react-native";
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { API_URL } from "@/constants/api";
 import { useCategoryStore } from "@/store/useCategoryStore";
 import { ImageUploadField } from "../ImageUploader";
-import { BarcodeGeneratorField } from "../BarcodeGeneratorField";
+import { NativeCategoryDropdown } from "../NativeCategoryDropdown";
 
 interface Product {
   id: string;
@@ -166,8 +175,9 @@ export function UpdateProduct({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button size="sm" variant="secondary" className="flex-1">
-            <Text className="text-xs">Edit</Text>
+          <Button size="sm">
+            <Icon as={Edit2} size={16} color={"white"} />
+            <Text>Edit</Text>
           </Button>
         )}
       </DialogTrigger>
@@ -229,23 +239,6 @@ export function UpdateProduct({
               />
             </View>
 
-            <View className="grid gap-2">
-              <Label htmlFor="update-barcodeUrl">Barcode URL *</Label>
-              <Input
-                id="update-barcodeUrl"
-                placeholder="Enter barcode URL"
-                value={formData.barcodeUrl}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, barcodeUrl: text })
-                }
-              />
-            </View>
-
-            {/* <BarcodeGeneratorField
-                          sku={formData.sku}
-                          onBarcodeGenerated={() => setBarcodeGenerated(true)}
-                        /> */}
-
             <ImageUploadField
               label="Product Image"
               value={imageData?.uri || existingImageUrl}
@@ -253,53 +246,15 @@ export function UpdateProduct({
             />
 
             <View className="grid gap-2">
-              <Label>Category *</Label>
-              <Text className="mb-1 text-sm text-gray-500">
-                {formData.categoryId
-                  ? categories.find((c) => c.id === formData.categoryId)?.name
-                  : "Select a category"}
-              </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {categories.map((cat) => {
-                  const isSelected = formData.categoryId === cat.id;
-                  return (
-                    <Pressable
-                      key={cat.id}
-                      onPress={() =>
-                        setFormData({ ...formData, categoryId: cat.id })
-                      }
-                      className={`rounded-lg px-4 py-2.5 border-2 ${
-                        isSelected
-                          ? "bg-green-50 border-green-500"
-                          : "bg-gray-50 border-gray-300"
-                      }`}
-                    >
-                      <View className="flex-row items-center gap-2">
-                        <View
-                          className={`w-5 h-5 rounded border-2 items-center justify-center ${
-                            isSelected
-                              ? "bg-green-500 border-green-500"
-                              : "bg-white border-gray-300"
-                          }`}
-                        >
-                          {isSelected && (
-                            <Text className="text-white text-xs font-bold">
-                              ✓
-                            </Text>
-                          )}
-                        </View>
-                        <Text
-                          className={`text-sm font-medium ${
-                            isSelected ? "text-green-700" : "text-gray-700"
-                          }`}
-                        >
-                          {cat.name}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
+              <NativeCategoryDropdown
+                label="Category *"
+                value={formData.categoryId}
+                onValueChange={(categoryId) => {
+                  setFormData({ ...formData, categoryId });
+                }}
+                categories={categories}
+                placeholder="Select a category"
+              />
             </View>
           </View>
         </ScrollView>

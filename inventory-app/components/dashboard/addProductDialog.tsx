@@ -12,15 +12,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Text } from "@/components/ui/text";
-import { View, ScrollView, Alert, Pressable } from "react-native";
-import { Icon } from "../ui/icon";
-import { Plus } from "lucide-react-native";
+import { View, ScrollView, Alert } from "react-native";
 import { useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { API_URL } from "@/constants/api";
 import { useCategoryStore } from "@/store/useCategoryStore";
 import { BarcodeGeneratorField } from "../BarcodeGeneratorField";
 import { ImageUploadField } from "../ImageUploader";
+import { NativeCategoryDropdown } from "../NativeCategoryDropdown"; // Import your component
+import Feather from "@expo/vector-icons/Feather";
 
 interface AddProductProps {
   onProductAdded?: () => void;
@@ -130,8 +130,8 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="h-12 w-[170px]" variant={"secondary"}>
-          <Text>Add new</Text>
+        <Button className="h-12" variant={"secondary"}>
+          <Feather name="plus" size={20} color={"black"} />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
@@ -164,7 +164,7 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
                 value={formData.sku}
                 onChangeText={(text) => {
                   setFormData({ ...formData, sku: text });
-                  setBarcodeGenerated(false); // Reset barcode when SKU changes
+                  setBarcodeGenerated(false);
                 }}
               />
             </View>
@@ -208,54 +208,17 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
               onImageSelected={setImageData}
             />
 
+            {/* Replaced category section with NativeCategoryDropdown */}
             <View className="grid gap-2">
-              <Label>Category *</Label>
-              <Text className="mb-1 text-sm text-gray-500">
-                {formData.categoryId
-                  ? categories.find((c) => c.id === formData.categoryId)?.name
-                  : "Select a category"}
-              </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {categories.map((cat) => {
-                  const isSelected = formData.categoryId === cat.id;
-                  return (
-                    <Pressable
-                      key={cat.id}
-                      onPress={() =>
-                        setFormData({ ...formData, categoryId: cat.id })
-                      }
-                      className={`rounded-lg px-4 py-2.5 border-2 ${
-                        isSelected
-                          ? "bg-green-50 border-green-500"
-                          : "bg-gray-50 border-gray-300"
-                      }`}
-                    >
-                      <View className="flex-row items-center gap-2">
-                        <View
-                          className={`w-5 h-5 rounded border-2 items-center justify-center ${
-                            isSelected
-                              ? "bg-green-500 border-green-500"
-                              : "bg-white border-gray-300"
-                          }`}
-                        >
-                          {isSelected && (
-                            <Text className="text-white text-xs font-bold">
-                              ✓
-                            </Text>
-                          )}
-                        </View>
-                        <Text
-                          className={`text-sm font-medium ${
-                            isSelected ? "text-green-700" : "text-gray-700"
-                          }`}
-                        >
-                          {cat.name}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
+              <NativeCategoryDropdown
+                label="Category *"
+                value={formData.categoryId}
+                onValueChange={(categoryId) =>
+                  setFormData({ ...formData, categoryId })
+                }
+                categories={categories}
+                placeholder="Select a category"
+              />
             </View>
           </View>
         </ScrollView>
