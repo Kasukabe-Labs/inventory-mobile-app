@@ -61,28 +61,7 @@ export default function SearchBar({
     <View className="flex-col gap-3 px-4 py-3">
       {/* Greeting */}
       <View className="mt-32 flex-col items-start gap-1 w-full">
-        <View className="flex-row items-center gap-2">
-          <Text variant={"h1"}>Welcome</Text>
-          {user?.role && (
-            <Badge
-              variant="secondary"
-              className={`mt-1 ${
-                user?.role === "ADMIN"
-                  ? "bg-emerald-500 dark:bg-emerald-600"
-                  : "bg-blue-500 dark:bg-blue-600"
-              }`}
-            >
-              <Icon as={User} className="text-white" />
-              <Text className="text-white">{user?.role}</Text>
-            </Badge>
-          )}
-        </View>
-
-        {user?.email && (
-          <Text variant={"muted"} className="mt-1">
-            Your email: {user.email}
-          </Text>
-        )}
+        <Text variant={"h1"}>{user?.role}</Text>
       </View>
 
       {/* Search Input */}
@@ -103,7 +82,7 @@ export default function SearchBar({
           onPress={handlePress}
         >
           <Animated.View style={{ transform: [{ rotate }] }}>
-            <Feather name="refresh-cw" size={20} className="text-primary" />
+            <Feather name="refresh-cw" size={20} color={"#27CFF5"} />
           </Animated.View>
         </Button>
       </View>
@@ -112,7 +91,7 @@ export default function SearchBar({
         <>
           <AddProduct />
 
-          <Button
+          {/* <Button
             variant={"secondary"}
             onPress={() =>
               router.push({
@@ -121,7 +100,7 @@ export default function SearchBar({
             }
           >
             <Text> View Analytics 📊</Text>
-          </Button>
+          </Button> */}
         </>
       )}
     </View>
