@@ -45,7 +45,7 @@ export async function generateAndUploadBarcode(
   quantity: number
 ): Promise<string> {
   try {
-    const barcodeText = `SKU:${sku} | Price:${price} | Qty:${quantity}`;
+    const barcodeText = `${sku}|${price}|${quantity}`;
 
     const barcodeBuffer = await bwipjs.toBuffer({
       bcid: "code128",
@@ -82,7 +82,7 @@ export async function generateBarcodePreview(
   quantity: number
 ): Promise<string> {
   try {
-    const barcodeText = `SKU:${sku} | Price:${price} | Qty:${quantity}`;
+    const barcodeText = `${sku}|${price}|${quantity}`;
 
     const barcodeBuffer = await bwipjs.toBuffer({
       bcid: "code128",
