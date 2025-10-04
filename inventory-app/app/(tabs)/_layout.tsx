@@ -2,8 +2,10 @@ import { Tabs } from "expo-router";
 import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { PortalHost } from "@rn-primitives/portal";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function TabsLayout() {
+  const user = useAuthStore((state) => state.user);
   return (
     <>
       <Tabs
@@ -13,11 +15,11 @@ export default function TabsLayout() {
         }}
       >
         <Tabs.Screen
-          name="dashboard"
+          name="inventory"
           options={{
-            title: "Dashboard",
+            title: "Inventory",
             tabBarIcon: ({ size, color }) => (
-              <Feather name="home" size={size} color={color} />
+              <AntDesign name="product" size={size} color={color} />
             ),
           }}
         />
@@ -30,6 +32,18 @@ export default function TabsLayout() {
             ),
           }}
         />
+
+        {user?.role === "ADMIN" && (
+          <Tabs.Screen
+            name="analytics"
+            options={{
+              title: "Analytics",
+              tabBarIcon: ({ size, color }) => (
+                <AntDesign name="area-chart" size={size} color={color} />
+              ),
+            }}
+          />
+        )}
       </Tabs>
       <PortalHost />
     </>

@@ -3,7 +3,7 @@ import ProductList from "@/components/ProductList";
 import { useState } from "react";
 import { ScrollView, RefreshControl } from "react-native";
 
-export default function Dashboard() {
+export default function Inventory() {
   const [refreshing, setRefreshing] = useState(false);
   const [reloadKey, setReloadKey] = useState(0); // used to force re-render
 

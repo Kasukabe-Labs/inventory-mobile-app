@@ -116,7 +116,7 @@ export default function SearchBar({
             variant={"secondary"}
             onPress={() =>
               router.push({
-                pathname: "/analytics",
+                pathname: "/(tabs)/analytics",
               })
             }
           >

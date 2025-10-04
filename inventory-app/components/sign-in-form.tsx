@@ -61,7 +61,7 @@ export function SignInForm() {
         token: data.token,
       });
       // Alert.alert("Success", "Logged in successfully!");
-      router.push("/(tabs)/dashboard");
+      router.push("/(tabs)/inventory");
     } catch (error) {
       console.error("Login error:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
