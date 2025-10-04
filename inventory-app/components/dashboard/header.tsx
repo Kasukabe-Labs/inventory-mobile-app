@@ -13,7 +13,7 @@ export default function Header() {
 
   function logoutUser() {
     clearUser();
-    Alert.alert("User Logged Out");
+    Alert.alert("User Logged Out", "Please login again to gain access");
     router.push("/");
   }
 
@@ -41,7 +41,7 @@ export default function Header() {
           <Button variant="secondary" size="icon">
             <MaterialIcons name="settings" size={15} color="black" />{" "}
           </Button>
-          <Button onPress={() => logoutUser} variant="destructive" size="icon">
+          <Button onPress={logoutUser} variant="destructive" size="icon">
             <MaterialIcons name="logout" size={15} color="white" />{" "}
           </Button>
         </View>
