@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Pressable,
+  useColorScheme,
 } from "react-native";
 import { Badge } from "./ui/badge";
 import { Link, router } from "expo-router";
@@ -41,6 +42,8 @@ interface ApiResponse {
 export default function ProductList() {
   const user = useAuthStore((state) => state.user);
   const setCategories = useCategoryStore((state) => state.setCategories);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,8 +97,7 @@ export default function ProductList() {
   };
 
   const getStockStatus = (quantity: number) => {
-    if (quantity === 0)
-      return { text: "Out of Stock", color: "text-destructive" };
+    if (quantity === 0) return { text: "Out of Stock", color: "text-red-500" };
     if (quantity < 10) return { text: "Low Stock", color: "text-yellow-500" };
     return { text: "In Stock", color: "text-green-500" };
   };
@@ -119,25 +121,40 @@ export default function ProductList() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="hsl(var(--primary))" />
-        <Text className="text-primary mt-4">Loading products...</Text>
+      <View
+        className={`flex-1 items-center justify-center ${isDark ? "bg-black" : "bg-white"}`}
+      >
+        <ActivityIndicator
+          size="large"
+          color={isDark ? "#ffffff" : "#000000"}
+        />
+        <Text className={`mt-4 ${isDark ? "text-white" : "text-black"}`}>
+          Loading products...
+        </Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 bg-background items-center justify-center px-6">
-        <Text className="text-destructive text-lg font-semibold mb-2">
-          Error
+      <View
+        className={`flex-1 items-center justify-center px-6 ${isDark ? "bg-black" : "bg-white"}`}
+      >
+        <Text className="text-red-500 text-lg font-semibold mb-2">Error</Text>
+        <Text
+          className={`text-center mb-4 ${isDark ? "text-gray-400" : "text-gray-600"}`}
+        >
+          {error}
         </Text>
-        <Text className="text-muted-foreground text-center mb-4">{error}</Text>
         <Pressable
           onPress={fetchProducts}
-          className="bg-primary px-6 py-3 rounded-lg active:opacity-80"
+          className={`px-6 py-3 rounded-lg active:opacity-80 ${isDark ? "bg-white" : "bg-black"}`}
         >
-          <Text className="text-primary-foreground font-semibold">Retry</Text>
+          <Text
+            className={`font-semibold ${isDark ? "text-black" : "text-white"}`}
+          >
+            Retry
+          </Text>
         </Pressable>
       </View>
     );
@@ -154,10 +171,14 @@ export default function ProductList() {
         setSelectedCategoryId={setSelectedCategoryId}
       />
 
-      <View className="flex-1 bg-background">
+      <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
         {/* Header */}
-        <View className="bg-card px-6 pt-6 border-t border-border pb-4">
-          <Text className="text-foreground text-2xl font-bold">Products</Text>
+        <View className={`px-6 pt-6 pb-4`}>
+          <Text
+            className={`text-2xl font-bold ${isDark ? "text-white" : "text-black"}`}
+          >
+            Products
+          </Text>
         </View>
 
         {/* Product List - Grid Layout */}
@@ -175,10 +196,12 @@ export default function ProductList() {
                         params: { id: product.id },
                       })
                     }
-                    className="bg-card rounded-2xl border border-border overflow-hidden active:opacity-80"
+                    className={`rounded-2xl border overflow-hidden active:opacity-80 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
                   >
                     {/* Product Image */}
-                    <View className="w-full aspect-square bg-muted relative">
+                    <View
+                      className={`w-full aspect-square relative ${isDark ? "bg-gray-800" : "bg-gray-100"}`}
+                    >
                       <Image
                         source={{ uri: product.imageUrl }}
                         className="w-full h-full"
@@ -191,7 +214,9 @@ export default function ProductList() {
                           variant="secondary"
                           className="rounded-md px-2 py-1"
                         >
-                          <Text className="text-xs font-medium">
+                          <Text
+                            className={`text-xs font-medium ${isDark ? "text-white" : "text-black"}`}
+                          >
                             {product.category.name}
                           </Text>
                         </Badge>
@@ -203,8 +228,10 @@ export default function ProductList() {
                           variant="secondary"
                           className="rounded-md px-2 py-1"
                         >
-                          <Text className="text-xs font-medium">
-                            {product.category.name}
+                          <Text
+                            className={`text-xs font-medium ${isDark ? "text-white" : "text-black"}`}
+                          >
+                            {product.quantity}
                           </Text>
                         </Badge>
                       </View>
@@ -213,7 +240,7 @@ export default function ProductList() {
                     {/* Product Info */}
                     <View className="p-3">
                       <Text
-                        className="text-foreground font-semibold text-sm leading-5 mb-2"
+                        className={`font-semibold text-sm leading-5 mb-2 ${isDark ? "text-white" : "text-black"}`}
                         numberOfLines={2}
                         style={{ minHeight: 40 }}
                       >
@@ -222,15 +249,19 @@ export default function ProductList() {
 
                       {/* Price left & SKU right */}
                       <View className="flex-row items-center justify-between gap-2">
-                        <Text className="text-foreground text-base font-bold flex-shrink">
+                        <Text
+                          className={`text-base font-bold flex-shrink ${isDark ? "text-white" : "text-black"}`}
+                        >
                           {formatPrice(product.price)}
                         </Text>
                         <Badge
                           variant="secondary"
                           className="rounded-md px-2 py-1"
                         >
-                          <Text className="text-xs font-medium">
-                            {product.category.name}
+                          <Text
+                            className={`text-xs font-medium ${isDark ? "text-white" : "text-black"}`}
+                          >
+                            {product.sku}
                           </Text>
                         </Badge>
                       </View>
@@ -244,10 +275,14 @@ export default function ProductList() {
           {/* Empty State */}
           {filteredProducts.length === 0 && (
             <View className="items-center justify-center py-16">
-              <Text className="text-muted-foreground text-lg">
+              <Text
+                className={`text-lg ${isDark ? "text-gray-400" : "text-gray-600"}`}
+              >
                 No products found
               </Text>
-              <Text className="text-muted-foreground text-sm mt-2">
+              <Text
+                className={`text-sm mt-2 ${isDark ? "text-gray-500" : "text-gray-500"}`}
+              >
                 Try searching with SKU or title
               </Text>
             </View>

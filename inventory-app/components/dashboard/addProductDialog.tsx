@@ -12,14 +12,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Text } from "@/components/ui/text";
-import { View, ScrollView, Alert } from "react-native";
+import { View, ScrollView, Alert, useColorScheme } from "react-native";
 import { useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { API_URL } from "@/constants/api";
 import { useCategoryStore } from "@/store/useCategoryStore";
 import { BarcodeGeneratorField } from "../BarcodeGeneratorField";
 import { ImageUploadField } from "../ImageUploader";
-import { NativeCategoryDropdown } from "../NativeCategoryDropdown"; // Import your component
+import { NativeCategoryDropdown } from "../NativeCategoryDropdown";
 import Feather from "@expo/vector-icons/Feather";
 
 interface AddProductProps {
@@ -29,6 +29,8 @@ interface AddProductProps {
 export function AddProduct({ onProductAdded }: AddProductProps) {
   const user = useAuthStore((state) => state.user);
   const categories = useCategoryStore((state) => state.categories);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -131,13 +133,17 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="h-12" variant={"secondary"}>
-          <Feather name="plus" size={20} color={"black"} />
+          <Feather name="plus" size={20} color={isDark ? "white" : "black"} />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Product</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className={isDark ? "text-white" : "text-black"}>
+            Add New Product
+          </DialogTitle>
+          <DialogDescription
+            className={isDark ? "text-gray-400" : "text-gray-600"}
+          >
             Fill in the product details below. Fields marked with * are
             required.
           </DialogDescription>
@@ -145,7 +151,12 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
         <ScrollView className="max-h-[400px]">
           <View className="grid gap-4 py-4">
             <View className="grid gap-2">
-              <Label htmlFor="name">Product Name *</Label>
+              <Label
+                htmlFor="name"
+                className={isDark ? "text-white" : "text-black"}
+              >
+                Product Name *
+              </Label>
               <Input
                 id="name"
                 placeholder="Enter product name"
@@ -153,11 +164,22 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
                 onChangeText={(text) =>
                   setFormData({ ...formData, name: text })
                 }
+                className={
+                  isDark
+                    ? "text-white border-gray-700 bg-gray-900"
+                    : "text-black border-gray-300 bg-white"
+                }
+                placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
               />
             </View>
 
             <View className="grid gap-2">
-              <Label htmlFor="sku">SKU *</Label>
+              <Label
+                htmlFor="sku"
+                className={isDark ? "text-white" : "text-black"}
+              >
+                SKU *
+              </Label>
               <Input
                 id="sku"
                 placeholder="Enter SKU (must be unique)"
@@ -166,11 +188,22 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
                   setFormData({ ...formData, sku: text });
                   setBarcodeGenerated(false);
                 }}
+                className={
+                  isDark
+                    ? "text-white border-gray-700 bg-gray-900"
+                    : "text-black border-gray-300 bg-white"
+                }
+                placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
               />
             </View>
 
             <View className="grid gap-2">
-              <Label htmlFor="price">Price *</Label>
+              <Label
+                htmlFor="price"
+                className={isDark ? "text-white" : "text-black"}
+              >
+                Price *
+              </Label>
               <Input
                 id="price"
                 placeholder="0.00"
@@ -179,11 +212,22 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
                 onChangeText={(text) =>
                   setFormData({ ...formData, price: text })
                 }
+                className={
+                  isDark
+                    ? "text-white border-gray-700 bg-gray-900"
+                    : "text-black border-gray-300 bg-white"
+                }
+                placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
               />
             </View>
 
             <View className="grid gap-2">
-              <Label htmlFor="quantity">Quantity</Label>
+              <Label
+                htmlFor="quantity"
+                className={isDark ? "text-white" : "text-black"}
+              >
+                Quantity
+              </Label>
               <Input
                 id="quantity"
                 placeholder="0"
@@ -192,6 +236,12 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
                 onChangeText={(text) =>
                   setFormData({ ...formData, quantity: text })
                 }
+                className={
+                  isDark
+                    ? "text-white border-gray-700 bg-gray-900"
+                    : "text-black border-gray-300 bg-white"
+                }
+                placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
               />
             </View>
 
@@ -225,11 +275,15 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" disabled={loading}>
-              <Text>Cancel</Text>
+              <Text className={isDark ? "text-white" : "text-black"}>
+                Cancel
+              </Text>
             </Button>
           </DialogClose>
           <Button onPress={handleSubmit} disabled={loading}>
-            <Text>{loading ? "Adding..." : "Add Product"}</Text>
+            <Text className={isDark ? "text-black" : "text-white"}>
+              {loading ? "Adding..." : "Add Product"}
+            </Text>
           </Button>
         </DialogFooter>
       </DialogContent>

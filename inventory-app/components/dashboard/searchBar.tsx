@@ -1,4 +1,4 @@
-import { Animated, View } from "react-native";
+import { Animated, View, useColorScheme } from "react-native";
 import React, { useRef } from "react";
 import { Input } from "../ui/input";
 import { User } from "lucide-react-native";
@@ -41,6 +41,8 @@ export default function SearchBar({
   setSelectedCategoryId,
 }: SearchBarProps) {
   const user = useAuthStore((state) => state.user);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const insets = useSafeAreaInsets();
 
@@ -77,8 +79,14 @@ export default function SearchBar({
     <View className="flex-col gap-3 px-4 py-3">
       {/* Greeting */}
       <View className="mt-32 flex-col items-start gap-1 w-full">
-        <Text className="text-2xl font-black">Product Management 📦</Text>
-        <Text className="text-sm text-muted-foreground">
+        <Text
+          className={`text-2xl font-black ${isDark ? "text-white" : "text-black"}`}
+        >
+          Product Management 📦
+        </Text>
+        <Text
+          className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}
+        >
           Search, filter and manage your inventory items
         </Text>
       </View>
@@ -90,7 +98,12 @@ export default function SearchBar({
             placeholder="Search by SKU or Title..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            className="border border-gray-300 rounded-lg h-12 pl-4 pr-4"
+            className={`border rounded-lg h-12 pl-4 pr-4 ${
+              isDark
+                ? "border-gray-700 bg-gray-900 text-white"
+                : "border-gray-300 bg-white text-black"
+            }`}
+            placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
             onSubmitEditing={onSearch}
             returnKeyType="search"
           />
@@ -100,7 +113,7 @@ export default function SearchBar({
           className="h-12 px-4 rounded-lg"
           onPress={onSearch}
         >
-          <Feather name="search" size={20} color={"black"} />
+          <Feather name="search" size={20} color={isDark ? "white" : "black"} />
         </Button>
       </View>
 
@@ -127,18 +140,44 @@ export default function SearchBar({
               {/* Make trigger stretch to fill wrapper */}
               <SelectTrigger
                 style={{ height: 48, flex: 1, justifyContent: "center" }}
+                className={
+                  isDark
+                    ? "bg-gray-900 border-gray-700"
+                    : "bg-white border-gray-300"
+                }
               >
-                <SelectValue placeholder="All Categories" />
+                <SelectValue
+                  placeholder="All Categories"
+                  className={isDark ? "text-white" : "text-black"}
+                />
               </SelectTrigger>
 
-              <SelectContent>
+              <SelectContent
+                className={
+                  isDark
+                    ? "bg-gray-900 border-gray-700"
+                    : "bg-white border-gray-300"
+                }
+              >
                 <SelectGroup>
-                  <SelectLabel>Categories</SelectLabel>
-                  <SelectItem key="all" value="" label="All Categories">
+                  <SelectLabel className={isDark ? "text-white" : "text-black"}>
+                    Categories
+                  </SelectLabel>
+                  <SelectItem
+                    key="all"
+                    value=""
+                    label="All Categories"
+                    className={isDark ? "text-white" : "text-black"}
+                  >
                     All Categories
                   </SelectItem>
                   {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id} label={cat.name}>
+                    <SelectItem
+                      key={cat.id}
+                      value={cat.id}
+                      label={cat.name}
+                      className={isDark ? "text-white" : "text-black"}
+                    >
                       {cat.name}
                     </SelectItem>
                   ))}
@@ -155,7 +194,11 @@ export default function SearchBar({
             onPress={handlePress}
           >
             <Animated.View style={{ transform: [{ rotate }] }}>
-              <Feather name="refresh-cw" size={20} color={"black"} />
+              <Feather
+                name="refresh-cw"
+                size={20}
+                color={isDark ? "white" : "black"}
+              />
             </Animated.View>
           </Button>
         </View>

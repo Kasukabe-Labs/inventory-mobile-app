@@ -6,6 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  useColorScheme,
 } from "react-native";
 import { BarChart, PieChart } from "react-native-gifted-charts";
 
@@ -33,6 +34,9 @@ export interface Product {
 }
 
 const AnalyticsDashboard = () => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -144,45 +148,63 @@ const AnalyticsDashboard = () => {
     >
       <View className="mt-16">
         {/* Title */}
-        <Text className="text-4xl font-bold text-primary mb-3 px-6">
+        <Text
+          className={`text-4xl font-bold mb-3 px-6 ${isDark ? "text-white" : "text-black"}`}
+        >
           Analytics
         </Text>
 
         {/* Key Metrics - Simple & Clear */}
         <View className="mb-3">
           <View className="rounded-2xl p-6 mb-3">
-            <Text className="text-sm font-medium mb-1 ">
+            <Text
+              className={`text-sm font-medium mb-1 ${isDark ? "text-white" : "text-black"}`}
+            >
               Total Inventory Value
             </Text>
-            <Text className="text-primary text-3xl font-bold">
+            <Text
+              className={`text-3xl font-bold ${isDark ? "text-white" : "text-black"}`}
+            >
               ₹{(totalValue / 1000).toFixed(1)}k 💸
             </Text>
           </View>
 
           <View className="flex-row gap-3">
             <View className="flex-1 bg-card rounded-2xl p-5 shadow-sm">
-              <Text className="text-muted-foreground text-xs font-medium mb-1">
+              <Text
+                className={`text-xs font-medium mb-1 ${isDark ? "text-white" : "text-black"}`}
+              >
                 Products
               </Text>
-              <Text className="text-2xl font-bold text-primary">
+              <Text
+                className={`text-2xl font-bold ${isDark ? "text-white" : "text-black"}`}
+              >
                 {products.length}
               </Text>
             </View>
 
             <View className="flex-1 bg-card rounded-2xl p-5 shadow-sm">
-              <Text className="text-muted-foreground text-xs font-medium mb-1">
+              <Text
+                className={`text-xs font-medium mb-1 ${isDark ? "text-white" : "text-black"}`}
+              >
                 Total Units
               </Text>
-              <Text className="text-2xl font-bold text-primary">
+              <Text
+                className={`text-2xl font-bold ${isDark ? "text-white" : "text-black"}`}
+              >
                 {totalStock}
               </Text>
             </View>
 
             <View className="flex-1 bg-card rounded-2xl p-5 shadow-sm">
-              <Text className="text-muted-foreground text-xs font-medium mb-1">
+              <Text
+                className={`text-xs font-medium mb-1 ${isDark ? "text-white" : "text-black"}`}
+              >
                 Categories
               </Text>
-              <Text className="text-2xl font-bold text-primary">
+              <Text
+                className={`text-2xl font-bold ${isDark ? "text-white" : "text-black"}`}
+              >
                 {categoryData.length}
               </Text>
             </View>
@@ -191,10 +213,14 @@ const AnalyticsDashboard = () => {
 
         {/* Top 5 Products - FIXED BAR CHART */}
         <View className="bg-card rounded-2xl p-5 mb-6 shadow-md">
-          <Text className="text-xl font-bold text-primary mb-2">
+          <Text
+            className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-black"}`}
+          >
             🏆 Top 5 Products
           </Text>
-          <Text className="text-sm text-muted-foreground mb-6">
+          <Text
+            className={`text-sm mb-6 ${isDark ? "text-white" : "text-black"}`}
+          >
             Highest value items in stock
           </Text>
 
@@ -227,10 +253,14 @@ const AnalyticsDashboard = () => {
 
         {/* Stock Alerts - Simplified */}
         <View className="bg-card rounded-2xl p-5 mb-6 shadow-md">
-          <Text className="text-xl font-bold text-primary mb-2">
+          <Text
+            className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-black"}`}
+          >
             📦 Stock Status
           </Text>
-          <Text className="text-sm text-muted-foreground mb-6">
+          <Text
+            className={`text-sm mb-6 ${isDark ? "text-white" : "text-black"}`}
+          >
             Products by stock level
           </Text>
 
@@ -243,10 +273,14 @@ const AnalyticsDashboard = () => {
               innerCircleColor="#FFFFFF"
               centerLabelComponent={() => (
                 <View>
-                  <Text className="text-3xl font-bold text-primary text-center">
+                  <Text
+                    className={`text-3xl font-bold text-center ${isDark ? "text-white" : "text-black"}`}
+                  >
                     {products.length}
                   </Text>
-                  <Text className="text-xs text-muted-foreground text-center">
+                  <Text
+                    className={`text-xs text-center ${isDark ? "text-white" : "text-black"}`}
+                  >
                     Products
                   </Text>
                 </View>
@@ -262,11 +296,15 @@ const AnalyticsDashboard = () => {
                     className="w-3 h-3 rounded-full mr-2"
                     style={{ backgroundColor: alert.color }}
                   />
-                  <Text className="text-sm text-muted-foreground">
+                  <Text
+                    className={`text-sm ${isDark ? "text-white" : "text-black"}`}
+                  >
                     {alert.text}
                   </Text>
                 </View>
-                <Text className="text-2xl font-bold text-primary">
+                <Text
+                  className={`text-2xl font-bold ${isDark ? "text-white" : "text-black"}`}
+                >
                   {alert.value}
                 </Text>
               </View>
@@ -276,10 +314,14 @@ const AnalyticsDashboard = () => {
 
         {/* Categories Distribution */}
         <View className="bg-card rounded-2xl p-5 mb-6 shadow-md">
-          <Text className="text-xl font-bold text-primary mb-2">
+          <Text
+            className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-black"}`}
+          >
             📊 By Category
           </Text>
-          <Text className="text-sm text-muted-foreground mb-6">
+          <Text
+            className={`text-sm mb-6 ${isDark ? "text-white" : "text-black"}`}
+          >
             Units distributed across categories
           </Text>
 
@@ -306,11 +348,15 @@ const AnalyticsDashboard = () => {
                     className="w-4 h-4 rounded mr-3"
                     style={{ backgroundColor: cat.color }}
                   />
-                  <Text className="text-sm font-medium text-primary">
+                  <Text
+                    className={`text-sm font-medium ${isDark ? "text-white" : "text-black"}`}
+                  >
                     {cat.text}
                   </Text>
                 </View>
-                <Text className="text-sm font-bold text-primary">
+                <Text
+                  className={`text-sm font-bold ${isDark ? "text-white" : "text-black"}`}
+                >
                   {cat.value} units
                 </Text>
               </View>

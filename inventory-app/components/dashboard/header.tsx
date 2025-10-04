@@ -1,4 +1,4 @@
-import { Alert, View } from "react-native";
+import { Alert, useColorScheme, View } from "react-native";
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -11,6 +11,9 @@ import { Badge } from "../ui/badge";
 export default function Header() {
   const user = useAuthStore((state) => state.user);
   const clearUser = useAuthStore((state) => state.clearUser);
+
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   function logoutUser() {
     clearUser();

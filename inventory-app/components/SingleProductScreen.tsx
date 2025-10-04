@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Pressable,
   RefreshControl,
+  useColorScheme,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useEffect, useCallback } from "react";
@@ -44,6 +45,8 @@ interface Product {
 
 export default function SingleProductScreen() {
   const user = useAuthStore((state) => state.user);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const { id } = useLocalSearchParams();
   const router = useRouter();
@@ -127,7 +130,9 @@ export default function SingleProductScreen() {
     return (
       <View className="flex-1 bg-background items-center justify-center">
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text className="text-muted-foreground mt-4">Loading product...</Text>
+        <Text className={`mt-4 ${isDark ? "text-white" : "text-black"}`}>
+          Loading product...
+        </Text>
       </View>
     );
   }
@@ -136,10 +141,14 @@ export default function SingleProductScreen() {
     return (
       <View className="flex-1 bg-background items-center justify-center p-6">
         <Icon as={Package} size={64} className="text-muted-foreground mb-4" />
-        <Text className="text-foreground text-xl font-bold mb-2">
+        <Text
+          className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-black"}`}
+        >
           Product Not Found
         </Text>
-        <Text className="text-muted-foreground text-center mb-6">
+        <Text
+          className={`text-center mb-6 ${isDark ? "text-white" : "text-black"}`}
+        >
           The product you're looking for doesn't exist or has been removed.
         </Text>
         <Button onPress={() => router.back()}>
@@ -201,7 +210,9 @@ export default function SingleProductScreen() {
               variant="secondary"
               className="rounded-lg px-3 py-2 shadow-sm"
             >
-              <Text className="text-sm font-medium">
+              <Text
+                className={`text-sm font-medium ${isDark ? "text-white" : "text-black"}`}
+              >
                 {product.category.name}
               </Text>
             </Badge>
@@ -213,7 +224,9 @@ export default function SingleProductScreen() {
               variant="secondary"
               className="rounded-lg px-3 py-2 shadow-sm"
             >
-              <Text className="text-sm font-semibold">
+              <Text
+                className={`text-sm font-semibold ${isDark ? "text-white" : "text-black"}`}
+              >
                 {product.quantity} in stock
               </Text>
             </Badge>
@@ -224,11 +237,15 @@ export default function SingleProductScreen() {
         <View className="px-5 py-6">
           {/* Product Name & Price */}
           <View className="mb-8">
-            <Text className="text-foreground text-2xl font-bold mb-3 leading-7">
+            <Text
+              className={`text-2xl font-bold mb-3 leading-7 ${isDark ? "text-white" : "text-black"}`}
+            >
               {product.name}
             </Text>
 
-            <Text className="text-foreground text-3xl font-bold mb-4">
+            <Text
+              className={`text-3xl font-bold mb-4 ${isDark ? "text-white" : "text-black"}`}
+            >
               {formatPrice(product.price)}
             </Text>
 
@@ -251,11 +268,15 @@ export default function SingleProductScreen() {
                   size={18}
                   className="text-muted-foreground mr-2"
                 />
-                <Text className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                <Text
+                  className={`text-xs font-medium uppercase tracking-wide ${isDark ? "text-white" : "text-black"}`}
+                >
                   SKU
                 </Text>
               </View>
-              <Text className="text-foreground text-base font-semibold">
+              <Text
+                className={`text-base font-semibold ${isDark ? "text-white" : "text-black"}`}
+              >
                 {product.sku}
               </Text>
             </View>
@@ -268,16 +289,22 @@ export default function SingleProductScreen() {
                   size={18}
                   className="text-muted-foreground mr-2"
                 />
-                <Text className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                <Text
+                  className={`text-xs font-medium uppercase tracking-wide ${isDark ? "text-white" : "text-black"}`}
+                >
                   Stock Status
                 </Text>
               </View>
               <View className="flex-row items-center justify-between">
-                <Text className="text-foreground text-base font-semibold">
+                <Text
+                  className={`text-base font-semibold ${isDark ? "text-white" : "text-black"}`}
+                >
                   {product.quantity} units
                 </Text>
                 <Badge variant="secondary" className="rounded-md px-3 py-1.5">
-                  <Text className="text-xs font-semibold">
+                  <Text
+                    className={`text-xs font-semibold ${isDark ? "text-white" : "text-black"}`}
+                  >
                     {product.quantity > 50
                       ? "In Stock"
                       : product.quantity > 10
@@ -296,7 +323,9 @@ export default function SingleProductScreen() {
                   size={18}
                   className="text-muted-foreground mr-2"
                 />
-                <Text className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                <Text
+                  className={`text-xs font-medium uppercase tracking-wide ${isDark ? "text-white" : "text-black"}`}
+                >
                   Barcode
                 </Text>
               </View>
