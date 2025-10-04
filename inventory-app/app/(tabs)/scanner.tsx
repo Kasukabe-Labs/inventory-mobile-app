@@ -85,7 +85,10 @@ export default function Scanner({
     setHasPermission(status === "granted");
   };
 
-  const handleBarCodeScanned = async ({ data }: BarcodeScanningResult) => {
+  const handleBarCodeScanned = async ({
+    data,
+    type,
+  }: BarcodeScanningResult) => {
     if (scanned || loading) return;
 
     setScanned(true);
@@ -94,14 +97,67 @@ export default function Scanner({
     Vibration.vibrate(100);
 
     try {
+      // Clean the scanned data - remove any extra whitespace
+      let scannedCode = data.trim();
+      console.log("Raw scanned barcode:", scannedCode, "Type:", type);
+
+      // Code128 can have encoding issues with special chars
+      // Try to clean up common misreads
+      scannedCode = scannedCode
+        .replace(/\s+/g, "") // Remove all whitespace
+        .replace(/[^\x20-\x7E]/g, ""); // Remove non-printable characters
+
+      console.log("Cleaned barcode:", scannedCode);
+
+      // Split by pipe character
+      const parts = scannedCode.split("|");
+
+      if (parts.length < 3) {
+        // If we can't parse as expected format, try to match just the SKU part
+        console.log("Invalid format, trying direct SKU match");
+        await tryDirectSKUMatch(scannedCode);
+        return;
+      }
+
+      let [sku, priceStr, quantityStr] = parts;
+
+      // Clean each part
+      sku = sku.trim();
+      priceStr = priceStr.trim();
+      quantityStr = quantityStr.trim();
+
+      const price = parseFloat(priceStr);
+      const quantity = parseInt(quantityStr, 10);
+
+      console.log("Parsed - SKU:", sku, "Price:", price, "Quantity:", quantity);
+
       // Fetch all products and find by SKU
       const response = await fetch(`${API_URL}/api/products/get-all`);
       const result = await response.json();
 
       if (result.success) {
-        const foundProduct = result.data.find((p: Product) => p.sku === data);
+        // Try exact match first
+        let foundProduct = result.data.find(
+          (p: Product) =>
+            p.sku && p.sku.trim().toUpperCase() === sku.toUpperCase()
+        );
+
+        // If not found, try fuzzy matching (in case of scan errors)
+        if (!foundProduct) {
+          foundProduct = result.data.find((p: Product) => {
+            if (!p.sku) return false;
+            const productSku = p.sku.trim().toUpperCase();
+            const scannedSku = sku.toUpperCase();
+
+            // Check if they're similar (allowing for some OCR errors)
+            return (
+              productSku.includes(scannedSku) || scannedSku.includes(productSku)
+            );
+          });
+        }
 
         if (foundProduct) {
+          console.log("Product found:", foundProduct);
           setProduct(foundProduct);
           Vibration.vibrate([0, 100, 100, 100]);
 
@@ -119,7 +175,12 @@ export default function Scanner({
             }, 500);
           }, 1500);
         } else {
-          setError("Product not found with this barcode");
+          console.log("Product not found. SKU:", sku);
+          console.log(
+            "Available SKUs:",
+            result.data.map((p: Product) => p.sku)
+          );
+          setError("Product not found");
           Vibration.vibrate([0, 100, 50, 100]);
           setTimeout(() => {
             setScanned(false);
@@ -130,15 +191,55 @@ export default function Scanner({
       }
     } catch (err) {
       console.error("Error scanning barcode:", err);
-      setError("Failed to scan barcode. Please try again.");
+      setError("Scan error. Try again");
       Vibration.vibrate([0, 100, 50, 100]);
       setTimeout(() => {
         setScanned(false);
         setError(null);
         setLoading(false);
       }, 2000);
-    } finally {
-      // Don't set loading to false immediately, let the timeouts handle it
+    }
+  };
+
+  const tryDirectSKUMatch = async (scannedCode: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/products/get-all`);
+      const result = await response.json();
+
+      if (result.success) {
+        const foundProduct = result.data.find(
+          (p: Product) =>
+            p.sku &&
+            (p.sku.trim().toUpperCase() === scannedCode.toUpperCase() ||
+              scannedCode.toUpperCase().includes(p.sku.trim().toUpperCase()))
+        );
+
+        if (foundProduct) {
+          console.log("Product found via direct match:", foundProduct);
+          setProduct(foundProduct);
+          Vibration.vibrate([0, 100, 100, 100]);
+          onProductFound?.(foundProduct);
+
+          setTimeout(() => {
+            router.push(`/products/${foundProduct.id}`);
+            setTimeout(() => {
+              setProduct(null);
+              setScanned(false);
+              setLoading(false);
+            }, 500);
+          }, 1500);
+        } else {
+          throw new Error("Product not found");
+        }
+      }
+    } catch (err) {
+      setError("Product not found");
+      Vibration.vibrate([0, 100, 50, 100]);
+      setTimeout(() => {
+        setScanned(false);
+        setError(null);
+        setLoading(false);
+      }, 2000);
     }
   };
 
@@ -187,131 +288,121 @@ export default function Scanner({
         facing="back"
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
         barcodeScannerSettings={{
-          barcodeTypes: [
-            "qr",
-            "ean13",
-            "ean8",
-            "code128",
-            "code39",
-            "code93",
-            "codabar",
-            "upc_a",
-            "upc_e",
-          ],
+          barcodeTypes: ["code128"],
         }}
         enableTorch={flashEnabled}
-      >
-        {/* Header with Close Button */}
-        <BlurView intensity={80} tint="dark" style={styles.header}>
-          <View className="flex-row items-center justify-between px-4 pt-12 pb-4">
-            <Pressable onPress={onClose} className="active:opacity-70">
-              <Icon as={X} size={28} color="white" />
-            </Pressable>
+      />
 
-            <Text className="text-white text-lg font-semibold">
-              Scan Barcode
-            </Text>
+      {/* All UI elements moved outside CameraView with absolute positioning */}
 
-            <Pressable onPress={toggleFlash} className="active:opacity-70">
-              <Icon
-                as={flashEnabled ? Flashlight : FlashlightOff}
-                size={24}
-                color="white"
-              />
-            </Pressable>
-          </View>
-        </BlurView>
+      {/* Header with Close Button */}
+      <BlurView intensity={80} tint="dark" style={styles.header}>
+        <View className="flex-row items-center justify-between px-4 pt-12 pb-4">
+          <Pressable onPress={onClose} className="active:opacity-70">
+            <Icon as={X} size={28} color="white" />
+          </Pressable>
 
-        {/* Scanning Area Overlay */}
-        <View style={styles.overlay}>
-          {/* Top Overlay */}
-          <View style={styles.topOverlay} />
+          <Text className="text-white text-lg font-semibold">Scan Barcode</Text>
 
-          {/* Middle Row with Scan Area */}
-          <View style={styles.middleRow}>
-            <View style={styles.sideOverlay} />
+          <Pressable onPress={toggleFlash} className="active:opacity-70">
+            <Icon
+              as={flashEnabled ? Flashlight : FlashlightOff}
+              size={24}
+              color="white"
+            />
+          </Pressable>
+        </View>
+      </BlurView>
 
-            {/* Scan Area */}
-            <View style={styles.scanArea}>
-              {/* Corner Borders */}
-              <View style={styles.cornerTopLeft} />
-              <View style={styles.cornerTopRight} />
-              <View style={styles.cornerBottomLeft} />
-              <View style={styles.cornerBottomRight} />
+      {/* Scanning Area Overlay */}
+      <View style={styles.overlay}>
+        {/* Top Overlay */}
+        <View style={styles.topOverlay} />
 
-              {/* Scanning Line Animation - only show when actively scanning */}
-              {!scanned && !loading && !product && (
-                <View style={styles.scanLineContainer}>
-                  <View style={styles.scanLine} />
-                </View>
-              )}
+        {/* Middle Row with Scan Area */}
+        <View style={styles.middleRow}>
+          <View style={styles.sideOverlay} />
 
-              {/* Success State */}
-              {product && (
-                <View style={styles.resultContainer}>
-                  <Icon as={CheckCircle2} size={64} color="#22c55e" />
-                  <Text className="text-white text-xl font-bold mt-4 text-center">
-                    Product Found!
-                  </Text>
-                  <Text className="text-white/80 text-sm mt-2 text-center px-4">
-                    {product.name}
-                  </Text>
-                  <Text className="text-white/60 text-xs mt-2">
-                    Opening product...
-                  </Text>
-                </View>
-              )}
+          {/* Scan Area */}
+          <View style={styles.scanArea}>
+            {/* Corner Borders */}
+            <View style={styles.cornerTopLeft} />
+            <View style={styles.cornerTopRight} />
+            <View style={styles.cornerBottomLeft} />
+            <View style={styles.cornerBottomRight} />
 
-              {/* Error State */}
-              {error && (
-                <View style={styles.resultContainer}>
-                  <Icon as={AlertCircle} size={64} color="#ef4444" />
-                  <Text className="text-white text-xl font-bold mt-4 text-center px-4">
-                    {error}
-                  </Text>
-                </View>
-              )}
+            {/* Scanning Line Animation - only show when actively scanning */}
+            {!scanned && !loading && !product && (
+              <View style={styles.scanLineContainer}>
+                <View style={styles.scanLine} />
+              </View>
+            )}
 
-              {/* Loading State */}
-              {loading && !product && !error && (
-                <View style={styles.resultContainer}>
-                  <View className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin" />
-                  <Text className="text-white text-lg font-semibold mt-4">
-                    Searching...
-                  </Text>
-                </View>
-              )}
-            </View>
+            {/* Success State */}
+            {product && (
+              <View style={styles.resultContainer}>
+                <Icon as={CheckCircle2} size={64} color="#22c55e" />
+                <Text className="text-white text-xl font-bold mt-4 text-center">
+                  Product Found!
+                </Text>
+                <Text className="text-white/80 text-sm mt-2 text-center px-4">
+                  {product.name}
+                </Text>
+                <Text className="text-white/60 text-xs mt-2">
+                  Opening product...
+                </Text>
+              </View>
+            )}
 
-            <View style={styles.sideOverlay} />
+            {/* Error State */}
+            {error && (
+              <View style={styles.resultContainer}>
+                <Icon as={AlertCircle} size={64} color="#ef4444" />
+                <Text className="text-white text-xl font-bold mt-4 text-center px-4">
+                  {error}
+                </Text>
+              </View>
+            )}
+
+            {/* Loading State */}
+            {loading && !product && !error && (
+              <View style={styles.resultContainer}>
+                <View className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                <Text className="text-white text-lg font-semibold mt-4">
+                  Searching...
+                </Text>
+              </View>
+            )}
           </View>
 
-          {/* Bottom Overlay */}
-          <View style={styles.bottomOverlay} />
+          <View style={styles.sideOverlay} />
         </View>
 
-        {/* Instructions at Bottom */}
-        {!scanned && !loading && !product && !error && (
-          <BlurView intensity={80} tint="dark" style={styles.instructions}>
-            <Icon as={Scan} size={32} color="white" className="mb-3" />
-            <Text className="text-white text-lg font-semibold mb-2">
-              Position barcode in the frame
-            </Text>
-            <Text className="text-white/70 text-sm text-center">
-              The barcode will be scanned automatically
-            </Text>
-          </BlurView>
-        )}
+        {/* Bottom Overlay */}
+        <View style={styles.bottomOverlay} />
+      </View>
 
-        {/* Retry Button */}
-        {scanned && !product && !loading && error && (
-          <View style={styles.retryButton}>
-            <Button onPress={resetScanner} variant="default" size="lg">
-              <Text className="text-lg">Scan Again</Text>
-            </Button>
-          </View>
-        )}
-      </CameraView>
+      {/* Instructions at Bottom */}
+      {!scanned && !loading && !product && !error && (
+        <BlurView intensity={80} tint="dark" style={styles.instructions}>
+          <Icon as={Scan} size={32} color="white" className="mb-3" />
+          <Text className="text-white text-lg font-semibold mb-2">
+            Position barcode in the frame
+          </Text>
+          <Text className="text-white/70 text-sm text-center">
+            Hold steady for best results
+          </Text>
+        </BlurView>
+      )}
+
+      {/* Retry Button */}
+      {scanned && !product && !loading && error && (
+        <View style={styles.retryButton}>
+          <Button onPress={resetScanner} variant="default" size="lg">
+            <Text className="text-lg">Scan Again</Text>
+          </Button>
+        </View>
+      )}
     </View>
   );
 }
@@ -325,7 +416,8 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   overlay: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
   },
   topOverlay: {
     flex: 1,
@@ -416,6 +508,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     alignItems: "center",
+    zIndex: 5,
   },
   resultContainer: {
     justifyContent: "center",
@@ -428,5 +521,6 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     alignItems: "center",
+    zIndex: 5,
   },
 });
