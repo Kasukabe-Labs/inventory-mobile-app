@@ -12,12 +12,24 @@ import { AddProduct } from "./addProductDialog";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Badge } from "../ui/badge";
 import { router } from "expo-router";
+import { useCategoryStore } from "@/store/useCategoryStore";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SearchBarProps {
   searchQuery: string;
   setSearchQuery: (text: string) => void;
   onSearch: () => void;
   resetFilters: () => void;
+  selectedCategoryId: string | null;
+  setSelectedCategoryId: (id: string | null) => void;
 }
 
 export default function SearchBar({
@@ -25,6 +37,8 @@ export default function SearchBar({
   setSearchQuery,
   onSearch,
   resetFilters,
+  selectedCategoryId,
+  setSelectedCategoryId,
 }: SearchBarProps) {
   const user = useAuthStore((state) => state.user);
 
@@ -57,6 +71,8 @@ export default function SearchBar({
     outputRange: ["0deg", "360deg"],
   });
 
+  const categories = useCategoryStore((state) => state.categories);
+
   return (
     <View className="flex-col gap-3 px-4 py-3">
       {/* Greeting */}
@@ -88,20 +104,46 @@ export default function SearchBar({
       </View>
 
       {user?.role === "ADMIN" && (
-        <>
+        <View className="flex-row gap-2">
           <AddProduct />
 
-          {/* <Button
-            variant={"secondary"}
-            onPress={() =>
-              router.push({
-                pathname: "/(tabs)/analytics",
-              })
+          <Select
+            value={
+              selectedCategoryId
+                ? {
+                    value: selectedCategoryId,
+                    label:
+                      categories.find((c) => c.id === selectedCategoryId)
+                        ?.name || "",
+                  }
+                : { value: "", label: "All Categories" }
             }
+            onValueChange={(val) => {
+              if (val?.value) {
+                setSelectedCategoryId(val.value);
+              } else {
+                setSelectedCategoryId(null);
+              }
+            }}
           >
-            <Text> View Analytics 📊</Text>
-          </Button> */}
-        </>
+            <SelectTrigger className="h-12 bg-background rounded-lg px-3">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Categories</SelectLabel>
+                <SelectItem key="all" value="" label="All Categories">
+                  All Categories
+                </SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id} label={cat.name}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </View>
       )}
     </View>
   );

@@ -48,6 +48,9 @@ export default function ProductList() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
 
   const fetchProducts = async () => {
     try {
@@ -97,15 +100,21 @@ export default function ProductList() {
     return { text: "In Stock", color: "text-green-500" };
   };
 
-  const filteredProducts = products.filter(
-    (product) =>
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
       product.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-      product.sku.toLowerCase().includes(debouncedQuery.toLowerCase())
-  );
+      product.sku.toLowerCase().includes(debouncedQuery.toLowerCase());
+
+    const matchesCategory =
+      !selectedCategoryId || product.category.id === selectedCategoryId;
+
+    return matchesSearch && matchesCategory;
+  });
 
   const resetSearch = () => {
     setSearchQuery("");
     setDebouncedQuery("");
+    setSelectedCategoryId(null);
   };
 
   if (loading) {
@@ -141,6 +150,8 @@ export default function ProductList() {
         setSearchQuery={setSearchQuery}
         onSearch={() => setDebouncedQuery(searchQuery)}
         resetFilters={resetSearch}
+        selectedCategoryId={selectedCategoryId}
+        setSelectedCategoryId={setSelectedCategoryId}
       />
 
       <View className="flex-1 bg-background">
