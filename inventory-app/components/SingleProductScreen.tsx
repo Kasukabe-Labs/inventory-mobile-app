@@ -237,9 +237,17 @@ export default function SingleProductScreen() {
             <Text className="text-foreground text-3xl font-bold mb-3">
               {product.name}
             </Text>
+
             <Text className="text-primary text-4xl font-extrabold">
               {formatPrice(product.price)}
             </Text>
+            <QuantityDialog
+              currentQuantity={product.quantity}
+              productId={product.id}
+              onQuantityUpdated={(newQuantity) =>
+                handleQuantityUpdate(product.id, newQuantity)
+              }
+            />
           </View>
           {/* Info Cards */}
           <View className="gap-4 mb-6">

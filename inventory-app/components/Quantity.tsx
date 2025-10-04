@@ -80,7 +80,7 @@ export default function QuantityDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="secondary" className="flex-1">
+        <Button size="sm" className="flex-1 bg-green-500 text-primary">
           <Text className="text-xs font-semibold">Update Quantity</Text>
         </Button>
       </DialogTrigger>
