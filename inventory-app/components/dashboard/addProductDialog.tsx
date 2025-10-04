@@ -130,7 +130,7 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="h-12 w-[150px]" variant={"secondary"}>
+        <Button className="h-12 w-[170px]" variant={"secondary"}>
           <Text>Add new</Text>
         </Button>
       </DialogTrigger>

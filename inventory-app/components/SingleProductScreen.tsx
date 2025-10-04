@@ -23,6 +23,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { UpdateProduct } from "./dashboard/updateProductDialog";
 import { DeleteProduct } from "./dashboard/deleteProduct";
 import { API_URL } from "@/constants/api";
+import QuantityDialog from "./Quantity";
 
 interface Product {
   id: string;
@@ -94,6 +95,16 @@ export default function SingleProductScreen() {
     setIsAdmin(userRole === "ADMIN");
   };
 
+  // Handle quantity update
+  const handleQuantityUpdate = (productId: string, newQuantity: number) => {
+    if (product && product.id === productId) {
+      setProduct({
+        ...product,
+        quantity: newQuantity,
+      });
+    }
+  };
+
   useEffect(() => {
     fetchProduct();
     checkAdminStatus();
@@ -151,16 +162,26 @@ export default function SingleProductScreen() {
           </Pressable>
 
           <View className="flex-row gap-2">
-            <UpdateProduct
-              product={product}
-              onProductUpdated={handleProductUpdated}
+            <QuantityDialog
+              currentQuantity={product.quantity}
+              productId={product.id}
+              onQuantityUpdated={(newQuantity) =>
+                handleQuantityUpdate(product.id, newQuantity)
+              }
             />
+
             {isAdmin && (
-              <DeleteProduct
-                productId={product.id}
-                productName={product.name}
-                onProductDeleted={handleProductDeleted}
-              />
+              <>
+                <UpdateProduct
+                  product={product}
+                  onProductUpdated={handleProductUpdated}
+                />
+                <DeleteProduct
+                  productId={product.id}
+                  productName={product.name}
+                  onProductDeleted={handleProductDeleted}
+                />
+              </>
             )}
           </View>
         </View>
@@ -332,15 +353,6 @@ export default function SingleProductScreen() {
               </View>
             </View>
           </View>
-          {/* <View className="bg-muted/50 rounded-xl p-4 border border-border">
-            <Text className="text-muted-foreground text-sm mb-1">Category</Text>
-            <Text className="text-foreground text-xl font-bold">
-              {product.category.name}
-            </Text>
-            <Text className="text-muted-foreground text-xs mt-1">
-              ID: {product.categoryId}
-            </Text>
-          </View> */}
           {/* Bottom Spacing */}
           <View className="h-8" />
         </View>

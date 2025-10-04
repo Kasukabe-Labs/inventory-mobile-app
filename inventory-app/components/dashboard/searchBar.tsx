@@ -77,7 +77,10 @@ export default function SearchBar({
     <View className="flex-col gap-3 px-4 py-3">
       {/* Greeting */}
       <View className="mt-32 flex-col items-start gap-1 w-full">
-        <Text variant={"h1"}>{user?.role}</Text>
+        <Text className="text-2xl font-black">Product Management 📦</Text>
+        <Text className="text-sm text-muted-foreground">
+          Search, filter and manage your inventory items
+        </Text>
       </View>
 
       {/* Search Input */}
@@ -105,8 +108,6 @@ export default function SearchBar({
 
       {user?.role === "ADMIN" && (
         <View className="flex-row gap-2">
-          <AddProduct />
-
           <Select
             value={
               selectedCategoryId
@@ -143,6 +144,8 @@ export default function SearchBar({
               </SelectGroup>
             </SelectContent>
           </Select>
+
+          <AddProduct />
         </View>
       )}
     </View>

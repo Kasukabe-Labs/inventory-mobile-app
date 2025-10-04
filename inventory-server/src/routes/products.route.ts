@@ -6,6 +6,7 @@ import {
   getAllProducts,
   getSingleProductByID,
   updateProduct,
+  updateProductQuantity,
 } from "../controllers/products.controller.js";
 import { authenticate } from "../middlewares/verify.middleware.js";
 import { isAdmin } from "../middlewares/admin.middleware.js";
@@ -39,8 +40,11 @@ ProductRouter.put(
   "/update/:id",
   authenticate,
   upload.single("image"),
+  isAdmin,
   updateProduct
 );
+
+ProductRouter.patch("/updateQty/:id", authenticate, updateProductQuantity);
 
 // ✅ Only ADMIN can delete products
 ProductRouter.delete("/delete/:id", authenticate, isAdmin, deleteProduct);

@@ -166,9 +166,8 @@ export function UpdateProduct({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="outline" size="sm">
-            <Icon as={Pencil} size={16} className="text-foreground" />
-            <Text>Edit</Text>
+          <Button size="sm" variant="secondary" className="flex-1">
+            <Text className="text-xs">Edit</Text>
           </Button>
         )}
       </DialogTrigger>

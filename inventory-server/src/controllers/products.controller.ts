@@ -233,6 +233,56 @@ export async function getSingleProductByID(req: Request, res: Response) {
   }
 }
 
+export async function updateProductQuantity(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const { amount, action } = req.body; // action = 'increase' | 'decrease'
+
+    if (!id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Product ID is required" });
+    }
+
+    if (!amount || !["increase", "decrease"].includes(action)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid amount and action are required",
+      });
+    }
+
+    const product = await prisma.product.findUnique({ where: { id } });
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
+
+    const newQuantity =
+      action === "increase"
+        ? product.quantity + parseInt(amount)
+        : product.quantity - parseInt(amount);
+
+    if (newQuantity < 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Quantity cannot be negative" });
+    }
+
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: { quantity: newQuantity },
+    });
+
+    return res.status(200).json({ success: true, data: updatedProduct });
+  } catch (error) {
+    console.error("Error updating product quantity:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to update quantity" });
+  }
+}
+
 export async function generateBarcodePreviewEndpoint(
   req: Request,
   res: Response
