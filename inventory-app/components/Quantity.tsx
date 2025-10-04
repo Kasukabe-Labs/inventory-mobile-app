@@ -17,6 +17,16 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { API_URL } from "@/constants/api";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -41,14 +51,26 @@ export default function QuantityDialog({
   const [amount, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    "increase" | "decrease" | null
+  >(null);
 
-  const updateQuantity = async (action: "increase" | "decrease") => {
+  const handleConfirmUpdate = () => {
     const amt = parseInt(amount);
     if (isNaN(amt) || amt <= 0) {
       Alert.alert("Invalid Input", "Please enter a valid positive number");
       return;
     }
 
+    setPendingAction(null);
+    setConfirmOpen(true);
+  };
+
+  const updateQuantity = async () => {
+    if (!pendingAction) return;
+
+    const amt = parseInt(amount);
     setLoading(true);
     try {
       const response = await fetch(
@@ -59,7 +81,7 @@ export default function QuantityDialog({
             "Content-Type": "application/json",
             Authorization: `Bearer ${user?.token}`,
           },
-          body: JSON.stringify({ amount: amt, action }),
+          body: JSON.stringify({ amount: amt, action: pendingAction }),
         }
       );
 
@@ -69,9 +91,11 @@ export default function QuantityDialog({
         onQuantityUpdated?.(data.data.quantity);
         setAmount("");
         setIsOpen(false);
+        setConfirmOpen(false);
+        setPendingAction(null);
         Alert.alert(
           "Success",
-          `Quantity ${action === "increase" ? "increased" : "decreased"} by ${amt}`
+          `Quantity ${pendingAction === "increase" ? "increased" : "decreased"} by ${amt}`
         );
       } else {
         Alert.alert("Error", data.message || "Failed to update quantity");
@@ -87,6 +111,25 @@ export default function QuantityDialog({
   const handleClose = () => {
     setAmount("");
     setIsOpen(false);
+    setPendingAction(null);
+  };
+
+  const handleActionClick = (action: "increase" | "decrease") => {
+    const amt = parseInt(amount);
+    if (isNaN(amt) || amt <= 0) {
+      Alert.alert("Invalid Input", "Please enter a valid positive number");
+      return;
+    }
+    setPendingAction(action);
+    setConfirmOpen(true);
+  };
+
+  const getNewQuantity = () => {
+    const amt = parseInt(amount);
+    if (!pendingAction) return currentQuantity;
+    return pendingAction === "increase"
+      ? currentQuantity + amt
+      : Math.max(0, currentQuantity - amt);
   };
 
   const styles = StyleSheet.create({
@@ -221,96 +264,133 @@ export default function QuantityDialog({
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" style={styles.triggerButton}>
-          <Icon as={Edit3Icon} size={16} color={"white"} />
-          <Text style={styles.triggerButtonText}>Update Quantity</Text>
-        </Button>
-      </DialogTrigger>
-      <DialogContent style={styles.content}>
-        <DialogHeader style={styles.header} className="p-4">
-          <DialogTitle style={styles.title}>Update Quantity</DialogTitle>
-          <DialogDescription style={styles.description}>
-            Current stock:{" "}
-            <Text style={styles.currentStock}>{currentQuantity}</Text> units
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button size="sm" style={styles.triggerButton}>
+            <Icon as={Edit3Icon} size={16} color={"white"} />
+            <Text style={styles.triggerButtonText}>Update Quantity</Text>
+          </Button>
+        </DialogTrigger>
+        <DialogContent style={styles.content}>
+          <DialogHeader style={styles.header} className="p-4">
+            <DialogTitle style={styles.title}>Update Quantity</DialogTitle>
+            <DialogDescription style={styles.description}>
+              Current stock:{" "}
+              <Text style={styles.currentStock}>{currentQuantity}</Text> units
+            </DialogDescription>
+          </DialogHeader>
 
-        <View style={styles.body} className="p-4">
-          {/* Amount Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Enter Amount</Text>
-            <TextInput
-              keyboardType="numeric"
-              value={amount}
-              onChangeText={setAmount}
-              placeholder="0"
-              style={styles.input}
-              placeholderTextColor={isDark ? "#71717a" : "#a1a1aa"}
-            />
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.buttonRow}>
-            <Button
-              onPress={() => updateQuantity("increase")}
-              disabled={loading || !amount || parseInt(amount) <= 0}
-              style={[
-                styles.increaseButton,
-                (loading || !amount || parseInt(amount) <= 0) &&
-                  styles.increaseButtonDisabled,
-              ]}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? "..." : "+ Increase"}
-              </Text>
-            </Button>
-            <Button
-              onPress={() => updateQuantity("decrease")}
-              disabled={loading || !amount || parseInt(amount) <= 0}
-              style={[
-                styles.decreaseButton,
-                (loading || !amount || parseInt(amount) <= 0) &&
-                  styles.decreaseButtonDisabled,
-              ]}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? "..." : "- Decrease"}
-              </Text>
-            </Button>
-          </View>
-
-          {/* Preview */}
-          {amount && parseInt(amount) > 0 && (
-            <View style={styles.preview}>
-              <Text style={styles.previewText}>
-                New quantity will be:{" "}
-                <Text style={styles.previewBold}>
-                  {currentQuantity + parseInt(amount)}
-                </Text>{" "}
-                (increase) or{" "}
-                <Text style={styles.previewBold}>
-                  {Math.max(0, currentQuantity - parseInt(amount))}
-                </Text>{" "}
-                (decrease)
-              </Text>
+          <View style={styles.body} className="p-4">
+            {/* Amount Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Enter Amount</Text>
+              <TextInput
+                keyboardType="numeric"
+                value={amount}
+                onChangeText={setAmount}
+                placeholder="0"
+                style={styles.input}
+                placeholderTextColor={isDark ? "#71717a" : "#a1a1aa"}
+              />
             </View>
-          )}
-        </View>
 
-        <DialogFooter style={styles.footer}>
-          <DialogClose asChild>
-            <Button
-              variant="outline"
-              onPress={handleClose}
-              style={styles.cancelButton}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </Button>
-          </DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            {/* Action Buttons */}
+            <View style={styles.buttonRow}>
+              <Button
+                onPress={() => handleActionClick("increase")}
+                disabled={loading || !amount || parseInt(amount) <= 0}
+                style={[
+                  styles.increaseButton,
+                  (loading || !amount || parseInt(amount) <= 0) &&
+                    styles.increaseButtonDisabled,
+                ]}
+              >
+                <Text style={styles.buttonText}>+ Increase</Text>
+              </Button>
+              <Button
+                onPress={() => handleActionClick("decrease")}
+                disabled={loading || !amount || parseInt(amount) <= 0}
+                style={[
+                  styles.decreaseButton,
+                  (loading || !amount || parseInt(amount) <= 0) &&
+                    styles.decreaseButtonDisabled,
+                ]}
+              >
+                <Text style={styles.buttonText}>- Decrease</Text>
+              </Button>
+            </View>
+
+            {/* Preview */}
+            {amount && parseInt(amount) > 0 && (
+              <View style={styles.preview}>
+                <Text style={styles.previewText}>
+                  New quantity will be:{" "}
+                  <Text style={styles.previewBold}>
+                    {currentQuantity + parseInt(amount)}
+                  </Text>{" "}
+                  (increase) or{" "}
+                  <Text style={styles.previewBold}>
+                    {Math.max(0, currentQuantity - parseInt(amount))}
+                  </Text>{" "}
+                  (decrease)
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <DialogFooter style={styles.footer} className="p-4">
+            <DialogClose asChild>
+              <Button
+                variant="outline"
+                onPress={handleClose}
+                style={styles.cancelButton}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You are about to{" "}
+              <Text style={styles.previewBold}>
+                {pendingAction === "increase" ? "increase" : "decrease"}
+              </Text>{" "}
+              the quantity by <Text style={styles.previewBold}>{amount}</Text>{" "}
+              units.
+              {"\n\n"}
+              The new quantity will be:{" "}
+              <Text style={styles.previewBold}>{getNewQuantity()}</Text> units.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel asChild>
+              <Button variant="outline" disabled={loading}>
+                <Text>Cancel</Text>
+              </Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button
+                onPress={updateQuantity}
+                disabled={loading}
+                variant={
+                  pendingAction === "increase" ? "default" : "destructive"
+                }
+              >
+                <Text className="text-white">
+                  {loading ? "Updating..." : "Confirm Update"}
+                </Text>
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
