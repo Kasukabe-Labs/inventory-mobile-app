@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 export default function TabsLayout() {
   const user = useAuthStore((state) => state.user);
+
   return (
     <>
       <Tabs
@@ -32,18 +33,17 @@ export default function TabsLayout() {
             ),
           }}
         />
-
-        {user?.role === "ADMIN" && (
-          <Tabs.Screen
-            name="analytics"
-            options={{
-              title: "Analytics",
-              tabBarIcon: ({ size, color }) => (
-                <AntDesign name="area-chart" size={size} color={color} />
-              ),
-            }}
-          />
-        )}
+        <Tabs.Screen
+          name="analytics"
+          options={{
+            title: "Analytics",
+            tabBarIcon: ({ size, color }) => (
+              <AntDesign name="area-chart" size={size} color={color} />
+            ),
+            // Hide the tab for non-admin users
+            href: user?.role === "ADMIN" ? "/analytics" : null,
+          }}
+        />
       </Tabs>
       <PortalHost />
     </>
