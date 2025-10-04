@@ -20,6 +20,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { API_URL } from "@/constants/api";
 import { useCategoryStore } from "@/store/useCategoryStore";
 import { ImageUploadField } from "../ImageUploader";
+import { BarcodeGeneratorField } from "../BarcodeGeneratorField";
 
 interface Product {
   id: string;
@@ -240,6 +241,11 @@ export function UpdateProduct({
                 }
               />
             </View>
+
+            {/* <BarcodeGeneratorField
+                          sku={formData.sku}
+                          onBarcodeGenerated={() => setBarcodeGenerated(true)}
+                        /> */}
 
             <ImageUploadField
               label="Product Image"

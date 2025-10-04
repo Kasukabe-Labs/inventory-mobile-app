@@ -19,6 +19,7 @@ import { useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { API_URL } from "@/constants/api";
 import { useCategoryStore } from "@/store/useCategoryStore";
+import { BarcodeGeneratorField } from "../BarcodeGeneratorField";
 import { ImageUploadField } from "../ImageUploader";
 
 interface AddProductProps {
@@ -36,7 +37,6 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
     sku: "",
     quantity: "",
     price: "",
-    barcodeUrl: "",
     categoryId: "",
   });
   const [imageData, setImageData] = useState<{
@@ -44,6 +44,7 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
     name: string;
     type: string;
   } | null>(null);
+  const [barcodeGenerated, setBarcodeGenerated] = useState(false);
 
   const resetForm = () => {
     setFormData({
@@ -51,10 +52,10 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
       sku: "",
       quantity: "",
       price: "",
-      barcodeUrl: "",
       categoryId: "",
     });
     setImageData(null);
+    setBarcodeGenerated(false);
   };
 
   const handleSubmit = async () => {
@@ -62,13 +63,17 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
       !formData.name ||
       !formData.sku ||
       !formData.price ||
-      !formData.barcodeUrl ||
       !formData.categoryId
     ) {
       Alert.alert(
         "Error",
-        "Please fill in all required fields (Name, SKU, Price, Barcode URL, Category)"
+        "Please fill in all required fields (Name, SKU, Price, Category)"
       );
+      return;
+    }
+
+    if (!barcodeGenerated) {
+      Alert.alert("Error", "Please generate a barcode before submitting");
       return;
     }
 
@@ -84,12 +89,8 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("sku", formData.sku);
-      formDataToSend.append(
-        "quantity",
-        formData.quantity ? formData.quantity : "0"
-      );
+      formDataToSend.append("quantity", formData.quantity || "0");
       formDataToSend.append("price", formData.price);
-      formDataToSend.append("barcodeUrl", formData.barcodeUrl);
       formDataToSend.append("categoryId", formData.categoryId);
 
       // Append image if selected
@@ -105,7 +106,6 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          // Don't set Content-Type - let fetch set it automatically with boundary
         },
         body: formDataToSend,
       });
@@ -163,7 +163,10 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
                 id="sku"
                 placeholder="Enter SKU (must be unique)"
                 value={formData.sku}
-                onChangeText={(text) => setFormData({ ...formData, sku: text })}
+                onChangeText={(text) => {
+                  setFormData({ ...formData, sku: text });
+                  setBarcodeGenerated(false); // Reset barcode when SKU changes
+                }}
               />
             </View>
 
@@ -193,17 +196,12 @@ export function AddProduct({ onProductAdded }: AddProductProps) {
               />
             </View>
 
-            <View className="grid gap-2">
-              <Label htmlFor="barcodeUrl">Barcode URL *</Label>
-              <Input
-                id="barcodeUrl"
-                placeholder="Enter barcode URL"
-                value={formData.barcodeUrl}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, barcodeUrl: text })
-                }
-              />
-            </View>
+            <BarcodeGeneratorField
+              price={parseFloat(formData.price)}
+              quantity={parseInt(formData.quantity)}
+              sku={formData.sku}
+              onBarcodeGenerated={() => setBarcodeGenerated(true)}
+            />
 
             <ImageUploadField
               label="Product Image"

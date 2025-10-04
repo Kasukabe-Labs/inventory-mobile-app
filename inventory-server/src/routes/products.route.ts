@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   addProduct,
   deleteProduct,
+  generateBarcodePreviewEndpoint,
   getAllProducts,
   getSingleProductByID,
   updateProduct,
@@ -25,6 +26,14 @@ ProductRouter.post(
 );
 
 ProductRouter.get("/get/:id", getSingleProductByID);
+
+// ✅ Generate barcode preview (authenticated users)
+ProductRouter.post(
+  "/generate-barcode-preview",
+  authenticate,
+  generateBarcodePreviewEndpoint
+);
+
 // ✅ Only ADMIN can update products
 ProductRouter.put(
   "/update/:id",
