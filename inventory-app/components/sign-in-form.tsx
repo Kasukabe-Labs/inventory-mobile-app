@@ -1,16 +1,15 @@
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Text } from "@/components/ui/text";
 import * as React from "react";
-import { Pressable, TextInput, View, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
@@ -60,7 +59,6 @@ export function SignInForm() {
         role: data.user.role,
         token: data.token,
       });
-      // Alert.alert("Success", "Logged in successfully!");
       router.push("/(tabs)/inventory");
     } catch (error) {
       console.error("Login error:", error);
@@ -71,66 +69,186 @@ export function SignInForm() {
   }
 
   return (
-    <SafeAreaView className="min-h-screen w-full justify-center items-center">
-      <Card className="border-border/0 sm:border-border shadow-none sm:shadow-sm sm:shadow-black/5">
-        <CardHeader>
-          <CardTitle className="text-center text-xl sm:text-left">
-            Sign in to your Inventory 📦
-          </CardTitle>
-          <CardDescription className="text-center sm:text-left">
-            Welcome back! Please sign in to continue
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="gap-6">
-          <View className="gap-6">
-            {/* Email Field */}
-            <View className="gap-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                placeholder="m@example.com"
-                keyboardType="email-address"
-                autoComplete="email"
-                autoCapitalize="none"
-                onChangeText={setEmail}
-                value={email}
-                onSubmitEditing={onEmailSubmitEditing}
-                returnKeyType="next"
-              />
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.card}>
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.title}>Sign in to your Inventory 📦</Text>
+              <Text style={styles.description}>
+                Welcome back! Please sign in to continue
+              </Text>
             </View>
 
-            {/* Password Field */}
-            <View className="gap-1.5 relative w-full">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                ref={passwordInputRef}
-                id="password"
-                secureTextEntry={!showPassword}
-                onChangeText={setPassword}
-                value={password}
-                className="pr-10" // add padding so text doesn't overlap the icon
-                returnKeyType="send"
-                onSubmitEditing={onSubmit}
-              />
-              <Pressable
-                className="absolute right-3 top-[68%] -translate-y-1/2"
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Feather
-                  name={showPassword ? "eye" : "eye-off"}
-                  size={20} // smaller size
-                  color="gray"
+            {/* Form Content */}
+            <View style={styles.formContent}>
+              {/* Email Field */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="m@example.com"
+                  placeholderTextColor="#9ca3af"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  onChangeText={setEmail}
+                  value={email}
+                  onSubmitEditing={onEmailSubmitEditing}
+                  returnKeyType="next"
                 />
-              </Pressable>
-            </View>
+              </View>
 
-            {/* Submit Button */}
-            <Button className="w-full" onPress={onSubmit} disabled={loading}>
-              <Text>{loading ? "Loading..." : "Continue"}</Text>
-            </Button>
+              {/* Password Field */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Password</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    ref={passwordInputRef}
+                    style={[styles.input, styles.passwordInput]}
+                    placeholder="Enter your password"
+                    placeholderTextColor="#9ca3af"
+                    secureTextEntry={!showPassword}
+                    onChangeText={setPassword}
+                    value={password}
+                    returnKeyType="send"
+                    onSubmitEditing={onSubmit}
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeIcon}
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    <Feather
+                      name={showPassword ? "eye" : "eye-off"}
+                      size={20}
+                      color="#6b7280"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Submit Button */}
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  loading && styles.submitButtonDisabled,
+                ]}
+                onPress={onSubmit}
+                disabled={loading}
+              >
+                <Text style={styles.submitButtonText}>
+                  {loading ? "Loading..." : "Continue"}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </CardContent>
-      </Card>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f9fafb",
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+  },
+  card: {
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    padding: 24,
+    width: "100%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  header: {
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1f2937",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  description: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  formContent: {
+    gap: 20,
+  },
+  inputGroup: {
+    gap: 8,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 4,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: "#f9fafb",
+    color: "#1f2937",
+  },
+  passwordContainer: {
+    position: "relative",
+  },
+  passwordInput: {
+    paddingRight: 45,
+  },
+  eyeIcon: {
+    position: "absolute",
+    right: 12,
+    top: 10,
+    padding: 4,
+  },
+  submitButton: {
+    backgroundColor: "#2563eb",
+    padding: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+    shadowColor: "#2563eb",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#93c5fd",
+    opacity: 0.7,
+  },
+  submitButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});

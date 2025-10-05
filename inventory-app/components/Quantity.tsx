@@ -5,48 +5,26 @@ import {
   TextInput,
   Alert,
   StyleSheet,
-  useColorScheme,
+  Modal,
+  TouchableOpacity,
+  Pressable,
 } from "react-native";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { API_URL } from "@/constants/api";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Edit3Icon } from "lucide-react-native";
-import { Icon } from "./ui/icon";
+import Feather from "@expo/vector-icons/Feather";
 
 interface QuantityDialogProps {
-  productId: string;
+  id: string;
   currentQuantity: number;
   onQuantityUpdated?: (newQuantity: number) => void;
 }
 
 export default function QuantityDialog({
-  productId,
+  id,
   currentQuantity,
   onQuantityUpdated,
 }: QuantityDialogProps) {
   const user = useAuthStore((state) => state.user);
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
 
   const [amount, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -56,34 +34,20 @@ export default function QuantityDialog({
     "increase" | "decrease" | null
   >(null);
 
-  const handleConfirmUpdate = () => {
-    const amt = parseInt(amount);
-    if (isNaN(amt) || amt <= 0) {
-      Alert.alert("Invalid Input", "Please enter a valid positive number");
-      return;
-    }
-
-    setPendingAction(null);
-    setConfirmOpen(true);
-  };
-
   const updateQuantity = async () => {
     if (!pendingAction) return;
 
     const amt = parseInt(amount);
     setLoading(true);
     try {
-      const response = await fetch(
-        `${API_URL}/api/products/updateQty/${productId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user?.token}`,
-          },
-          body: JSON.stringify({ amount: amt, action: pendingAction }),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/products/updateQty`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
+        },
+        body: JSON.stringify({ id, amount: amt, action: pendingAction }),
+      });
 
       const data = await response.json();
 
@@ -132,265 +96,357 @@ export default function QuantityDialog({
       : Math.max(0, currentQuantity - amt);
   };
 
-  const styles = StyleSheet.create({
-    content: {
-      width: 400,
-      maxWidth: 400,
-    },
-    header: {
-      marginBottom: 8,
-    },
-    title: {
-      fontSize: 20,
-      fontWeight: "600",
-      color: isDark ? "#ffffff" : "#000000",
-    },
-    description: {
-      fontSize: 15,
-      marginTop: 8,
-      color: isDark ? "#a1a1aa" : "#71717a",
-    },
-    currentStock: {
-      fontWeight: "700",
-      color: "#3b82f6",
-    },
-    body: {
-      paddingVertical: 16,
-      gap: 16,
-    },
-    inputContainer: {
-      gap: 8,
-    },
-    label: {
-      fontSize: 14,
-      fontWeight: "500",
-      color: isDark ? "#ffffff" : "#000000",
-    },
-    input: {
-      borderWidth: 2,
-      borderColor: isDark ? "#3f3f46" : "#e4e4e7",
-      backgroundColor: isDark ? "#18181b" : "#ffffff",
-      color: isDark ? "#ffffff" : "#000000",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderRadius: 8,
-      fontSize: 18,
-      fontWeight: "600",
-      textAlign: "center",
-    },
-    buttonRow: {
-      flexDirection: "row",
-      gap: 12,
-      marginTop: 8,
-    },
-    increaseButton: {
-      flex: 1,
-      backgroundColor: "#16a34a",
-      paddingVertical: 14,
-      borderRadius: 8,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    increaseButtonDisabled: {
-      opacity: 0.5,
-    },
-    decreaseButton: {
-      flex: 1,
-      backgroundColor: "#dc2626",
-      paddingVertical: 14,
-      borderRadius: 8,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    decreaseButtonDisabled: {
-      opacity: 0.5,
-    },
-    buttonText: {
-      color: "#ffffff",
-      fontSize: 15,
-      fontWeight: "700",
-    },
-    preview: {
-      backgroundColor: isDark ? "#27272a" : "#f4f4f5",
-      borderRadius: 8,
-      padding: 12,
-      marginTop: 8,
-      height: 60,
-      justifyContent: "center",
-    },
-    previewText: {
-      fontSize: 14,
-      color: isDark ? "#a1a1aa" : "#71717a",
-      textAlign: "left",
-      lineHeight: 20,
-      flexShrink: 1,
-    },
-    previewBold: {
-      fontWeight: "700",
-      color: isDark ? "#ffffff" : "#000000",
-    },
-    footer: {
-      marginTop: 8,
-    },
-    cancelButton: {
-      width: "100%",
-      paddingVertical: 12,
-      borderRadius: 8,
-      borderWidth: 2,
-      borderColor: isDark ? "#3f3f46" : "#e4e4e7",
-      backgroundColor: "transparent",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    cancelButtonText: {
-      fontSize: 15,
-      fontWeight: "600",
-      color: isDark ? "#ffffff" : "#000000",
-    },
-    triggerButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      backgroundColor: "#3b82f6",
-      borderRadius: 6,
-    },
-    triggerButtonText: {
-      color: "#ffffff",
-      fontSize: 14,
-      fontWeight: "600",
-    },
-  });
-
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button size="sm" style={styles.triggerButton}>
-            <Icon as={Edit3Icon} size={16} color={"white"} />
-            <Text style={styles.triggerButtonText}>Update Quantity</Text>
-          </Button>
-        </DialogTrigger>
-        <DialogContent style={styles.content}>
-          <DialogHeader style={styles.header} className="p-4">
-            <DialogTitle style={styles.title}>Update Quantity</DialogTitle>
-            <DialogDescription style={styles.description}>
-              Current stock:{" "}
-              <Text style={styles.currentStock}>{currentQuantity}</Text> units
-            </DialogDescription>
-          </DialogHeader>
+      {/* Trigger Button */}
+      <TouchableOpacity
+        style={styles.triggerButton}
+        onPress={() => setIsOpen(true)}
+        activeOpacity={0.7}
+      >
+        <Feather name="package" size={16} color="#2563eb" />
+      </TouchableOpacity>
 
-          <View style={styles.body} className="p-4">
-            {/* Amount Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Enter Amount</Text>
-              <TextInput
-                keyboardType="numeric"
-                value={amount}
-                onChangeText={setAmount}
-                placeholder="0"
-                style={styles.input}
-                placeholderTextColor={isDark ? "#71717a" : "#a1a1aa"}
-              />
+      {/* Main Dialog */}
+      <Modal
+        visible={isOpen}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={handleClose}
+      >
+        <Pressable style={styles.modalOverlay} onPress={handleClose}>
+          <Pressable
+            style={styles.modalContent}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Update Quantity</Text>
+              <Text style={styles.modalDescription}>
+                Current stock:{" "}
+                <Text style={styles.currentStock}>{currentQuantity}</Text> units
+              </Text>
             </View>
 
-            {/* Action Buttons */}
-            <View style={styles.buttonRow}>
-              <Button
-                onPress={() => handleActionClick("increase")}
-                disabled={loading || !amount || parseInt(amount) <= 0}
-                style={[
-                  styles.increaseButton,
-                  (loading || !amount || parseInt(amount) <= 0) &&
-                    styles.increaseButtonDisabled,
-                ]}
-              >
-                <Text style={styles.buttonText}>+ Increase</Text>
-              </Button>
-              <Button
-                onPress={() => handleActionClick("decrease")}
-                disabled={loading || !amount || parseInt(amount) <= 0}
-                style={[
-                  styles.decreaseButton,
-                  (loading || !amount || parseInt(amount) <= 0) &&
-                    styles.decreaseButtonDisabled,
-                ]}
-              >
-                <Text style={styles.buttonText}>- Decrease</Text>
-              </Button>
-            </View>
-
-            {/* Preview */}
-            {amount && parseInt(amount) > 0 && (
-              <View style={styles.preview}>
-                <Text style={styles.previewText}>
-                  New quantity will be:{" "}
-                  <Text style={styles.previewBold}>
-                    {currentQuantity + parseInt(amount)}
-                  </Text>{" "}
-                  (increase) or{" "}
-                  <Text style={styles.previewBold}>
-                    {Math.max(0, currentQuantity - parseInt(amount))}
-                  </Text>{" "}
-                  (decrease)
-                </Text>
+            <View style={styles.modalBody}>
+              {/* Amount Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Enter Amount</Text>
+                <TextInput
+                  keyboardType="numeric"
+                  value={amount}
+                  onChangeText={setAmount}
+                  placeholder="0"
+                  style={styles.input}
+                  placeholderTextColor="#6b7280"
+                />
               </View>
-            )}
-          </View>
 
-          <DialogFooter style={styles.footer} className="p-4">
-            <DialogClose asChild>
-              <Button
-                variant="outline"
-                onPress={handleClose}
+              {/* Action Buttons */}
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  onPress={() => handleActionClick("increase")}
+                  disabled={loading || !amount || parseInt(amount) <= 0}
+                  style={[
+                    styles.increaseButton,
+                    (loading || !amount || parseInt(amount) <= 0) &&
+                      styles.buttonDisabled,
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.buttonText}>+ Increase</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleActionClick("decrease")}
+                  disabled={loading || !amount || parseInt(amount) <= 0}
+                  style={[
+                    styles.decreaseButton,
+                    (loading || !amount || parseInt(amount) <= 0) &&
+                      styles.buttonDisabled,
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.buttonText}>- Decrease</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Preview */}
+              {amount && parseInt(amount) > 0 && (
+                <View style={styles.preview}>
+                  <Text style={styles.previewText}>
+                    New quantity will be:{" "}
+                    <Text style={styles.previewBold}>
+                      {currentQuantity + parseInt(amount)}
+                    </Text>{" "}
+                    (increase) or{" "}
+                    <Text style={styles.previewBold}>
+                      {Math.max(0, currentQuantity - parseInt(amount))}
+                    </Text>{" "}
+                    (decrease)
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
                 style={styles.cancelButton}
+                onPress={handleClose}
+                activeOpacity={0.7}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              You are about to{" "}
-              <Text style={styles.previewBold}>
-                {pendingAction === "increase" ? "increase" : "decrease"}
-              </Text>{" "}
-              the quantity by <Text style={styles.previewBold}>{amount}</Text>{" "}
-              units.
-              {"\n\n"}
-              The new quantity will be:{" "}
-              <Text style={styles.previewBold}>{getNewQuantity()}</Text> units.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel asChild>
-              <Button variant="outline" disabled={loading}>
-                <Text>Cancel</Text>
-              </Button>
-            </AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <Button
+      {/* Confirmation Dialog */}
+      <Modal
+        visible={confirmOpen}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setConfirmOpen(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setConfirmOpen(false)}
+        >
+          <Pressable
+            style={styles.confirmModalContent}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Are you absolutely sure?</Text>
+              <Text style={styles.modalDescription}>
+                You are about to{" "}
+                <Text style={styles.previewBold}>
+                  {pendingAction === "increase" ? "increase" : "decrease"}
+                </Text>{" "}
+                the quantity by <Text style={styles.previewBold}>{amount}</Text>{" "}
+                units.{"\n\n"}
+                The new quantity will be:{" "}
+                <Text style={styles.previewBold}>{getNewQuantity()}</Text>{" "}
+                units.
+              </Text>
+            </View>
+
+            <View style={styles.confirmFooter}>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonOutline]}
+                onPress={() => setConfirmOpen(false)}
+                disabled={loading}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.buttonOutlineText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  pendingAction === "increase"
+                    ? styles.buttonPrimary
+                    : styles.buttonDestructive,
+                  loading && styles.buttonDisabled,
+                ]}
                 onPress={updateQuantity}
                 disabled={loading}
-                variant={
-                  pendingAction === "increase" ? "default" : "destructive"
-                }
+                activeOpacity={0.7}
               >
-                <Text className="text-white">
-                  {loading ? "Updating..." : "Confirm Update"}
+                <Text style={styles.buttonPrimaryText}>
+                  {loading ? "Updating..." : "Confirm"}
                 </Text>
-              </Button>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  triggerButton: {
+    flex: 1,
+    backgroundColor: "#f9fafb",
+    padding: 8,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    width: "90%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  confirmModalContent: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    width: "90%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    padding: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1f2937",
+    marginBottom: 8,
+  },
+  modalDescription: {
+    fontSize: 14,
+    color: "#6b7280",
+    lineHeight: 20,
+  },
+  currentStock: {
+    fontWeight: "700",
+    color: "#2563eb",
+  },
+  modalBody: {
+    padding: 24,
+    gap: 16,
+  },
+  inputContainer: {
+    gap: 8,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1f2937",
+  },
+  input: {
+    borderWidth: 2,
+    borderColor: "#e5e7eb",
+    backgroundColor: "#ffffff",
+    color: "#1f2937",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 8,
+  },
+  increaseButton: {
+    flex: 1,
+    backgroundColor: "#16a34a",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  decreaseButton: {
+    flex: 1,
+    backgroundColor: "#dc2626",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  preview: {
+    backgroundColor: "#f9fafb",
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+  },
+  previewText: {
+    fontSize: 14,
+    color: "#6b7280",
+    lineHeight: 20,
+  },
+  previewBold: {
+    fontWeight: "700",
+    color: "#1f2937",
+  },
+  modalFooter: {
+    padding: 24,
+    paddingTop: 0,
+  },
+  cancelButton: {
+    width: "100%",
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1f2937",
+  },
+  confirmFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 24,
+    gap: 12,
+  },
+  button: {
+    flex: 1,
+    height: 44,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  buttonOutline: {
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  buttonOutlineText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1f2937",
+  },
+  buttonPrimary: {
+    backgroundColor: "#2563eb",
+  },
+  buttonDestructive: {
+    backgroundColor: "#dc2626",
+  },
+  buttonPrimaryText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#ffffff",
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+});

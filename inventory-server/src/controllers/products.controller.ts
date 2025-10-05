@@ -93,7 +93,7 @@ export async function addProduct(req: Request, res: Response) {
 
 export async function updateProduct(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const { id } = req.body;
 
     if (!id) {
       return res
@@ -163,7 +163,7 @@ export async function updateProduct(req: Request, res: Response) {
 
 export async function deleteProduct(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const { id } = req.body;
 
     if (!id) {
       return res
@@ -235,7 +235,7 @@ export async function getSingleProductByID(req: Request, res: Response) {
 
 export async function updateProductQuantity(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const { id } = req.body;
     const { amount, action } = req.body; // action = 'increase' | 'decrease'
 
     if (!id) {

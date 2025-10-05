@@ -1,0 +1,16 @@
+Settings page:
+- Employee management
+    - addEmp
+    - view all emp
+    - delete emp
+    - edit emp
+
+- Stock management
+
+Consistent design system:
+
+Primary blue: #2563eb 
+Destructive red: #dc2626 
+Text colors: #1f2937, #6b7280
+Background: #ffffff
+Borders: #e5e7eb

@@ -26,8 +26,6 @@ ProductRouter.post(
   addProduct
 );
 
-ProductRouter.get("/get/:id", getSingleProductByID);
-
 // ✅ Generate barcode preview (authenticated users)
 ProductRouter.post(
   "/generate-barcode-preview",
@@ -37,16 +35,16 @@ ProductRouter.post(
 
 // ✅ Only ADMIN can update products
 ProductRouter.put(
-  "/update/:id",
+  "/update",
   authenticate,
   upload.single("image"),
   isAdmin,
   updateProduct
 );
 
-ProductRouter.patch("/updateQty/:id", authenticate, updateProductQuantity);
+ProductRouter.patch("/updateQty", authenticate, updateProductQuantity);
 
 // ✅ Only ADMIN can delete products
-ProductRouter.delete("/delete/:id", authenticate, isAdmin, deleteProduct);
+ProductRouter.delete("/delete", authenticate, isAdmin, deleteProduct);
 
 export default ProductRouter;

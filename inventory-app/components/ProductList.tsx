@@ -5,23 +5,27 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
-  RefreshControl,
-  Pressable,
-  useColorScheme,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
 } from "react-native";
-import { Badge } from "./ui/badge";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 import SearchBar from "./dashboard/searchBar";
 import { useAuthStore } from "@/store/useAuthStore";
 import { API_URL } from "@/constants/api";
 import { useCategoryStore } from "@/store/useCategoryStore";
+import Feather from "@expo/vector-icons/Feather";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { UpdateProduct } from "./dashboard/updateProductDialog";
+import { DeleteProduct } from "./dashboard/deleteProduct";
+import QuantityDialog from "./Quantity";
 
 interface Category {
   id: string;
   name: string;
 }
 
-interface Product {
+export interface Product {
   id: string;
   name: string;
   sku: string;
@@ -42,12 +46,9 @@ interface ApiResponse {
 export default function ProductList() {
   const user = useAuthStore((state) => state.user);
   const setCategories = useCategoryStore((state) => state.setCategories);
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -75,7 +76,6 @@ export default function ProductList() {
       console.error(err);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -83,11 +83,10 @@ export default function ProductList() {
     fetchProducts();
   }, []);
 
-  // 🔹 Debounce search query
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedQuery(searchQuery);
-    }, 500); // wait 500ms after user stops typing
+    }, 500);
 
     return () => clearTimeout(handler);
   }, [searchQuery]);
@@ -97,9 +96,9 @@ export default function ProductList() {
   };
 
   const getStockStatus = (quantity: number) => {
-    if (quantity === 0) return { text: "Out of Stock", color: "text-red-500" };
-    if (quantity < 10) return { text: "Low Stock", color: "text-yellow-500" };
-    return { text: "In Stock", color: "text-green-500" };
+    if (quantity === 0) return { text: "Out of Stock", color: "#dc2626" };
+    if (quantity < 10) return { text: "Low Stock", color: "#f59e0b" };
+    return { text: "In Stock", color: "#10b981" };
   };
 
   const filteredProducts = products.filter((product) => {
@@ -119,43 +118,41 @@ export default function ProductList() {
     setSelectedCategoryId(null);
   };
 
+  const handleProductUpdated = () => {
+    fetchProducts();
+  };
+
+  const handleProductDeleted = () => {
+    fetchProducts();
+  };
+
+  const handleQuantityUpdated = (productId: string, newQuantity: number) => {
+    setProducts((prevProducts) =>
+      prevProducts.map((product) =>
+        product.id === productId
+          ? { ...product, quantity: newQuantity }
+          : product
+      )
+    );
+  };
+
   if (loading) {
     return (
-      <View
-        className={`flex-1 items-center justify-center ${isDark ? "bg-black" : "bg-white"}`}
-      >
-        <ActivityIndicator
-          size="large"
-          color={isDark ? "#ffffff" : "#000000"}
-        />
-        <Text className={`mt-4 ${isDark ? "text-white" : "text-black"}`}>
-          Loading products...
-        </Text>
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#2563eb" />
+        <Text style={styles.loadingText}>Loading products...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View
-        className={`flex-1 items-center justify-center px-6 ${isDark ? "bg-black" : "bg-white"}`}
-      >
-        <Text className="text-red-500 text-lg font-semibold mb-2">Error</Text>
-        <Text
-          className={`text-center mb-4 ${isDark ? "text-gray-400" : "text-gray-600"}`}
-        >
-          {error}
-        </Text>
-        <Pressable
-          onPress={fetchProducts}
-          className={`px-6 py-3 rounded-lg active:opacity-80 ${isDark ? "bg-white" : "bg-black"}`}
-        >
-          <Text
-            className={`font-semibold ${isDark ? "text-black" : "text-white"}`}
-          >
-            Retry
-          </Text>
-        </Pressable>
+      <View style={styles.centerContainer}>
+        <Text style={styles.errorTitle}>Error</Text>
+        <Text style={styles.errorMessage}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchProducts}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -171,126 +168,271 @@ export default function ProductList() {
         setSelectedCategoryId={setSelectedCategoryId}
       />
 
-      <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
+      <ScrollView style={styles.container}>
         {/* Header */}
-        <View className={`px-6 pt-6 pb-4`}>
-          <Text
-            className={`text-2xl font-bold ${isDark ? "text-white" : "text-black"}`}
-          >
-            Products
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Products</Text>
+          <Text style={styles.headerSubtitle}>
+            {filteredProducts.length}{" "}
+            {filteredProducts.length === 1 ? "item" : "items"}
           </Text>
         </View>
 
-        {/* Product List - Grid Layout */}
-        <View className="flex-1 px-3">
-          <View className="flex-row flex-wrap -mx-1.5">
-            {filteredProducts.map((product) => {
-              const stockStatus = getStockStatus(product.quantity);
+        {/* Product Grid */}
+        <View style={styles.grid}>
+          {filteredProducts.map((product) => {
+            const stockStatus = getStockStatus(product.quantity);
 
-              return (
-                <View key={product.id} className="w-1/2 px-1.5 mb-3">
-                  <Pressable
-                    onPress={() =>
-                      router.push({
-                        pathname: "/products/[id]",
-                        params: { id: product.id },
-                      })
-                    }
-                    className={`rounded-2xl border overflow-hidden active:opacity-80 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
-                  >
-                    {/* Product Image */}
+            return (
+              <View key={product.id} style={styles.gridItem}>
+                <TouchableOpacity
+                  style={styles.productCard}
+                  activeOpacity={0.7}
+                >
+                  {/* Product Image */}
+                  <View style={styles.imageContainer}>
+                    <Image
+                      source={{ uri: product.imageUrl }}
+                      style={styles.productImage}
+                      resizeMode="cover"
+                    />
+
+                    {/* Stock Badge */}
                     <View
-                      className={`w-full aspect-square relative ${isDark ? "bg-gray-800" : "bg-gray-100"}`}
+                      style={[
+                        styles.stockBadge,
+                        { backgroundColor: stockStatus.color },
+                      ]}
                     >
-                      <Image
-                        source={{ uri: product.imageUrl }}
-                        className="w-full h-full"
-                        resizeMode="cover"
-                      />
-
-                      {/* Category Badge */}
-                      <View className="absolute top-2 left-2">
-                        <Badge
-                          variant="secondary"
-                          className="rounded-md px-2 py-1"
-                        >
-                          <Text
-                            className={`text-xs font-medium ${isDark ? "text-white" : "text-black"}`}
-                          >
-                            {product.category.name}
-                          </Text>
-                        </Badge>
-                      </View>
-
-                      {/* Quantity Badge */}
-                      <View className="absolute top-2 right-2">
-                        <Badge
-                          variant="secondary"
-                          className="rounded-md px-2 py-1"
-                        >
-                          <Text
-                            className={`text-xs font-medium ${isDark ? "text-white" : "text-black"}`}
-                          >
-                            {product.quantity}
-                          </Text>
-                        </Badge>
-                      </View>
-                    </View>
-
-                    {/* Product Info */}
-                    <View className="p-3">
-                      <Text
-                        className={`font-semibold text-sm leading-5 mb-2 ${isDark ? "text-white" : "text-black"}`}
-                        numberOfLines={2}
-                        style={{ minHeight: 40 }}
-                      >
-                        {product.name}
+                      <Text style={styles.stockBadgeText}>
+                        {product.quantity}
                       </Text>
-
-                      {/* Price left & SKU right */}
-                      <View className="flex-row items-center justify-between gap-2">
-                        <Text
-                          className={`text-base font-bold flex-shrink ${isDark ? "text-white" : "text-black"}`}
-                        >
-                          {formatPrice(product.price)}
-                        </Text>
-                        <Badge
-                          variant="secondary"
-                          className="rounded-md px-2 py-1"
-                        >
-                          <Text
-                            className={`text-xs font-medium ${isDark ? "text-white" : "text-black"}`}
-                          >
-                            {product.sku}
-                          </Text>
-                        </Badge>
-                      </View>
                     </View>
-                  </Pressable>
-                </View>
-              );
-            })}
-          </View>
+                  </View>
 
-          {/* Empty State */}
-          {filteredProducts.length === 0 && (
-            <View className="items-center justify-center py-16">
-              <Text
-                className={`text-lg ${isDark ? "text-gray-400" : "text-gray-600"}`}
-              >
-                No products found
-              </Text>
-              <Text
-                className={`text-sm mt-2 ${isDark ? "text-gray-500" : "text-gray-500"}`}
-              >
-                Try searching with SKU or title
-              </Text>
-            </View>
-          )}
+                  {/* Product Info */}
+                  <View style={styles.productInfo}>
+                    <Text style={styles.categoryBadge}>
+                      {product.category.name}
+                    </Text>
 
-          <View className="h-6" />
+                    <Text style={styles.productName} numberOfLines={2}>
+                      {product.name}
+                    </Text>
+
+                    <View style={styles.priceRow}>
+                      <Text style={styles.productPrice}>
+                        {formatPrice(product.price)}
+                      </Text>
+                      <Text style={styles.productSku}>#{product.sku}</Text>
+                    </View>
+
+                    {/* Action Buttons */}
+                    {user?.role === "ADMIN" && (
+                      <View style={styles.actionButtons}>
+                        <QuantityDialog
+                          id={product.id}
+                          currentQuantity={product.quantity}
+                          onQuantityUpdated={(newQuantity) =>
+                            handleQuantityUpdated(product.id, newQuantity)
+                          }
+                        />
+                        <UpdateProduct
+                          product={product}
+                          onProductUpdated={handleProductUpdated}
+                        />
+                        <DeleteProduct
+                          productId={product.id}
+                          productName={product.name}
+                          onProductDeleted={handleProductDeleted}
+                        />
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
         </View>
-      </View>
+
+        {/* Empty State */}
+        {filteredProducts.length === 0 && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateTitle}>No products found</Text>
+            <Text style={styles.emptyStateSubtitle}>
+              Try searching with SKU or title
+            </Text>
+          </View>
+        )}
+
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
     </>
   );
 }
+
+export const styles = StyleSheet.create({
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6b7280",
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#dc2626",
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: "#2563eb",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  container: {
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1f2937",
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 10,
+  },
+  gridItem: {
+    width: "50%",
+    padding: 6,
+  },
+  productCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  imageContainer: {
+    width: "100%",
+    aspectRatio: 1,
+    backgroundColor: "#f3f4f6",
+    position: "relative",
+  },
+  productImage: {
+    width: "100%",
+    height: "100%",
+  },
+  stockBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  stockBadgeText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  productInfo: {
+    padding: 12,
+  },
+  categoryBadge: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#2563eb",
+    backgroundColor: "#dbeafe",
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
+  productName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1f2937",
+    marginBottom: 8,
+    minHeight: 38,
+  },
+  priceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  productPrice: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1f2937",
+  },
+  productSku: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#6b7280",
+  },
+  actionButtons: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 4,
+  },
+  actionButton: {
+    flex: 1,
+    backgroundColor: "#f9fafb",
+    padding: 8,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 64,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1f2937",
+    marginBottom: 8,
+  },
+  emptyStateSubtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+  },
+  bottomSpacer: {
+    height: 24,
+  },
+});

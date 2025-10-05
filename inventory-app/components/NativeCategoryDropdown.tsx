@@ -6,8 +6,8 @@ import {
   FlatList,
   StyleSheet,
   Pressable,
+  Text,
 } from "react-native";
-import { Text } from "@/components/ui/text";
 import { ChevronDown, Check } from "lucide-react-native";
 
 interface CategoryOption {
@@ -60,7 +60,7 @@ export function NativeCategoryDropdown({
         >
           {displayText}
         </Text>
-        <ChevronDown size={20} color="#6B7280" />
+        <ChevronDown size={20} color="#6b7280" />
       </TouchableOpacity>
 
       <Modal
@@ -104,7 +104,7 @@ export function NativeCategoryDropdown({
                   >
                     {item.name}
                   </Text>
-                  {item.id === value && <Check size={20} color="#3B82F6" />}
+                  {item.id === value && <Check size={20} color="#2563eb" />}
                 </TouchableOpacity>
               )}
               ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: "600",
     color: "#374151",
     marginBottom: 8,
   },
@@ -132,25 +132,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "white",
+    backgroundColor: "#ffffff",
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: "#d1d5db",
     borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     minHeight: 48,
   },
   triggerDisabled: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#f3f4f6",
     opacity: 0.6,
   },
   triggerText: {
     fontSize: 16,
-    color: "#111827",
+    color: "#1f2937",
     flex: 1,
   },
   placeholderText: {
-    color: "#9CA3AF",
+    color: "#9ca3af",
   },
   modalOverlay: {
     flex: 1,
@@ -158,11 +158,16 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "white",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: "#ffffff",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     maxHeight: "70%",
     paddingBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   modalHeader: {
     flexDirection: "row",
@@ -171,12 +176,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: "#e5e7eb",
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#111827",
+    fontWeight: "700",
+    color: "#1f2937",
   },
   closeButton: {
     paddingVertical: 4,
@@ -184,8 +189,8 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     fontSize: 16,
-    color: "#3B82F6",
-    fontWeight: "500",
+    color: "#2563eb",
+    fontWeight: "600",
   },
   listContent: {
     paddingVertical: 8,
@@ -203,12 +208,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   selectedOptionText: {
-    color: "#3B82F6",
-    fontWeight: "500",
+    color: "#2563eb",
+    fontWeight: "600",
   },
   separator: {
     height: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#f3f4f6",
     marginHorizontal: 20,
   },
 });

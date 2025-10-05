@@ -9,6 +9,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { BarChart, PieChart } from "react-native-gifted-charts";
+import { Product } from "../ProductList";
 
 export interface Category {
   id: string;
@@ -19,19 +20,6 @@ type CategoryStats = {
   count: number;
   value: number;
 };
-
-export interface Product {
-  id: string;
-  name: string;
-  sku: string;
-  quantity: number;
-  price: string;
-  imageUrl?: string;
-  barcodeUrl: string;
-  category: Category;
-  createdAt: string;
-  updatedAt: string;
-}
 
 const AnalyticsDashboard = () => {
   const colorScheme = useColorScheme();

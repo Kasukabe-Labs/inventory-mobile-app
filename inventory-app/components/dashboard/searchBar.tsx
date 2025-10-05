@@ -1,17 +1,15 @@
-import { Animated, View, useColorScheme } from "react-native";
+import {
+  Animated,
+  View,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import React, { useRef } from "react";
-import { Input } from "../ui/input";
-import { User } from "lucide-react-native";
-import { Button } from "@/components/ui/button";
-import { Icon } from "@/components/ui/icon";
-import { Text } from "@/components/ui/text";
+import { Text } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
-import { Platform } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AddProduct } from "./addProductDialog";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Badge } from "../ui/badge";
-import { router } from "expo-router";
 import { useCategoryStore } from "@/store/useCategoryStore";
 import {
   Select,
@@ -22,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { NativeCategoryDropdown } from "../NativeCategoryDropdown";
 
 interface SearchBarProps {
   searchQuery: string;
@@ -41,18 +40,13 @@ export default function SearchBar({
   setSelectedCategoryId,
 }: SearchBarProps) {
   const user = useAuthStore((state) => state.user);
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-
-  const insets = useSafeAreaInsets();
+  const categories = useCategoryStore((state) => state.categories);
 
   const rotation = useRef(new Animated.Value(0)).current;
 
   const handlePress = () => {
-    // Run reset logic
     resetFilters();
 
-    // Trigger rotation animation
     Animated.sequence([
       Animated.timing(rotation, {
         toValue: 1,
@@ -67,142 +61,149 @@ export default function SearchBar({
     ]).start();
   };
 
-  // Map rotation value to degrees
   const rotate = rotation.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],
   });
 
-  const categories = useCategoryStore((state) => state.categories);
-
   return (
-    <View className="flex-col gap-3 px-4 py-3">
+    <View style={styles.container}>
       {/* Greeting */}
-      <View className="mt-32 flex-col items-start gap-1 w-full">
-        <Text
-          className={`text-2xl font-black ${isDark ? "text-white" : "text-black"}`}
-        >
-          Product Management 📦
-        </Text>
-        <Text
-          className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}
-        >
+      <View style={styles.greetingSection}>
+        <Text style={styles.title}>Product Management 📦</Text>
+        <Text style={styles.subtitle}>
           Search, filter and manage your inventory items
         </Text>
       </View>
 
       {/* Search Input */}
-      <View className="flex-row items-center gap-2 w-full">
-        <View className="flex-1 relative">
-          <Input
+      <View style={styles.searchRow}>
+        <View style={styles.searchInputContainer}>
+          <TextInput
+            style={styles.searchInput}
             placeholder="Search by SKU or Title..."
+            placeholderTextColor="#6b7280"
             value={searchQuery}
             onChangeText={setSearchQuery}
-            className={`border rounded-lg h-12 pl-4 pr-4 ${
-              isDark
-                ? "border-gray-700 bg-gray-900 text-white"
-                : "border-gray-300 bg-white text-black"
-            }`}
-            placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
             onSubmitEditing={onSearch}
             returnKeyType="search"
           />
         </View>
-        <Button
-          variant={"secondary"}
-          className="h-12 px-4 rounded-lg"
-          onPress={onSearch}
-        >
-          <Feather name="search" size={20} color={isDark ? "white" : "black"} />
-        </Button>
+        <TouchableOpacity style={styles.searchButton} onPress={onSearch}>
+          <Feather name="search" size={20} color="#1f2937" />
+        </TouchableOpacity>
       </View>
 
       {user?.role === "ADMIN" && (
-        <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-          {/* wrapper that will take remaining width */}
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Select
-              value={
-                selectedCategoryId
-                  ? {
-                      value: selectedCategoryId,
-                      label:
-                        categories.find((c) => c.id === selectedCategoryId)
-                          ?.name || "",
-                    }
-                  : { value: "", label: "All Categories" }
-              }
-              onValueChange={(val) => {
-                if (val?.value) setSelectedCategoryId(val.value);
+        <View style={styles.filterRow}>
+          <View style={styles.selectContainer}>
+            <NativeCategoryDropdown
+              value={selectedCategoryId || ""}
+              onValueChange={(categoryId) => {
+                if (categoryId) setSelectedCategoryId(categoryId);
                 else setSelectedCategoryId(null);
               }}
-            >
-              {/* Make trigger stretch to fill wrapper */}
-              <SelectTrigger
-                style={{ height: 48, flex: 1, justifyContent: "center" }}
-                className={
-                  isDark
-                    ? "bg-gray-900 border-gray-700"
-                    : "bg-white border-gray-300"
-                }
-              >
-                <SelectValue
-                  placeholder="All Categories"
-                  className={isDark ? "text-white" : "text-black"}
-                />
-              </SelectTrigger>
-
-              <SelectContent
-                className={
-                  isDark
-                    ? "bg-gray-900 border-gray-700"
-                    : "bg-white border-gray-300"
-                }
-              >
-                <SelectGroup>
-                  <SelectLabel className={isDark ? "text-white" : "text-black"}>
-                    Categories
-                  </SelectLabel>
-                  <SelectItem
-                    key="all"
-                    value=""
-                    label="All Categories"
-                    className={isDark ? "text-white" : "text-black"}
-                  >
-                    All Categories
-                  </SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem
-                      key={cat.id}
-                      value={cat.id}
-                      label={cat.name}
-                      className={isDark ? "text-white" : "text-black"}
-                    >
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+              categories={[{ id: "", name: "All Categories" }, ...categories]}
+              placeholder="All Categories"
+            />
           </View>
 
+          {/* Add Product */}
           <AddProduct />
 
-          <Button
-            variant="secondary"
-            style={{ height: 48, paddingHorizontal: 12, borderRadius: 8 }}
-            onPress={handlePress}
-          >
+          {/* Refresh Button */}
+          <TouchableOpacity style={styles.refreshButton} onPress={handlePress}>
             <Animated.View style={{ transform: [{ rotate }] }}>
-              <Feather
-                name="refresh-cw"
-                size={20}
-                color={isDark ? "white" : "black"}
-              />
+              <Feather name="refresh-cw" size={20} color="#1f2937" />
             </Animated.View>
-          </Button>
+          </TouchableOpacity>
         </View>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "column",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  greetingSection: {
+    marginTop: 128,
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 4,
+    width: "100%",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1f2937",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+  },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    width: "100%",
+  },
+  searchInputContainer: {
+    flex: 1,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    height: 48,
+    paddingHorizontal: 16,
+    backgroundColor: "#ffffff",
+    fontSize: 16,
+    color: "#1f2937",
+  },
+  searchButton: {
+    height: 48,
+    width: 48,
+    borderRadius: 8,
+    backgroundColor: "#f3f4f6",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  filterRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+  },
+  selectContainer: {
+    flex: 1,
+    minWidth: 0,
+  },
+  selectTrigger: {
+    height: 48,
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "#ffffff",
+    borderColor: "#d1d5db",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+  },
+  selectContent: {
+    backgroundColor: "#ffffff",
+    borderColor: "#d1d5db",
+    borderWidth: 1,
+    borderRadius: 8,
+  },
+  refreshButton: {
+    height: 48,
+    width: 48,
+    borderRadius: 8,
+    backgroundColor: "#f3f4f6",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});

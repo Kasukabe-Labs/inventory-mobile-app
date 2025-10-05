@@ -1,22 +1,16 @@
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Text } from "@/components/ui/text";
-import { Alert } from "react-native";
-import { Icon } from "../ui/icon";
-import { Trash2 } from "lucide-react-native";
-import { useState } from "react";
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  Alert,
+  TouchableOpacity,
+  Pressable,
+} from "react-native";
 import { useAuthStore } from "@/store/useAuthStore";
 import { API_URL } from "@/constants/api";
+import Feather from "@expo/vector-icons/Feather";
 
 interface DeleteProductProps {
   productId: string;
@@ -45,15 +39,14 @@ export function DeleteProduct({
         return;
       }
 
-      const response = await fetch(
-        `${API_URL}/api/products/delete/${productId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/api/products/delete`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: productId }),
+      });
 
       const data = await response.json();
 
@@ -72,42 +65,152 @@ export function DeleteProduct({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
-        {trigger || (
-          <Button variant="destructive" size="sm">
-            <Icon as={Trash2} size={16} color={"white"} />
-            <Text>Delete</Text>
-          </Button>
-        )}
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the
-            product
-            <Text className="font-semibold"> "{productName}"</Text> from the
-            database.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel asChild>
-            <Button variant="outline" disabled={loading}>
-              <Text>Cancel</Text>
-            </Button>
-          </AlertDialogCancel>
-          <AlertDialogAction asChild>
-            <Button
-              variant="destructive"
-              onPress={handleDelete}
-              disabled={loading}
-            >
-              <Text>{loading ? "Deleting..." : "Delete Product"}</Text>
-            </Button>
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      {trigger ? (
+        <Pressable onPress={() => setOpen(true)}>{trigger}</Pressable>
+      ) : (
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => setOpen(true)}
+          activeOpacity={0.7}
+        >
+          <Feather name="trash-2" size={16} color="#dc2626" />
+        </TouchableOpacity>
+      )}
+
+      <Modal
+        visible={open}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setOpen(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setOpen(false)}>
+          <Pressable
+            style={styles.modalContent}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Are you absolutely sure?</Text>
+              <Text style={styles.modalDescription}>
+                This action cannot be undone. This will permanently delete the
+                product <Text style={styles.productName}>"{productName}"</Text>{" "}
+                from the database.
+              </Text>
+            </View>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonOutline]}
+                onPress={() => setOpen(false)}
+                disabled={loading}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.buttonOutlineText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.buttonDestructive,
+                  loading && styles.buttonDisabled,
+                ]}
+                onPress={handleDelete}
+                disabled={loading}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.buttonDestructiveText}>
+                  {loading ? "Deleting..." : "Delete"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  actionButton: {
+    flex: 1,
+    backgroundColor: "#f9fafb",
+    padding: 8,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    width: "90%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    padding: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1f2937",
+    marginBottom: 12,
+  },
+  modalDescription: {
+    fontSize: 14,
+    color: "#6b7280",
+    lineHeight: 20,
+  },
+  productName: {
+    fontWeight: "600",
+    color: "#1f2937",
+  },
+  modalFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 24,
+    paddingTop: 0,
+    gap: 12,
+  },
+  button: {
+    flex: 1,
+    height: 44,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  buttonOutline: {
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  buttonOutlineText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1f2937",
+  },
+  buttonDestructive: {
+    backgroundColor: "#dc2626",
+  },
+  buttonDestructiveText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#ffffff",
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+});
