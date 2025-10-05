@@ -228,26 +228,29 @@ export default function ProductList() {
                     </View>
 
                     {/* Action Buttons */}
-                    {user?.role === "ADMIN" && (
-                      <View style={styles.actionButtons}>
-                        <QuantityDialog
-                          id={product.id}
-                          currentQuantity={product.quantity}
-                          onQuantityUpdated={(newQuantity) =>
-                            handleQuantityUpdated(product.id, newQuantity)
-                          }
-                        />
-                        <UpdateProduct
-                          product={product}
-                          onProductUpdated={handleProductUpdated}
-                        />
-                        <DeleteProduct
-                          productId={product.id}
-                          productName={product.name}
-                          onProductDeleted={handleProductDeleted}
-                        />
-                      </View>
-                    )}
+
+                    <View style={styles.actionButtons}>
+                      <QuantityDialog
+                        id={product.id}
+                        currentQuantity={product.quantity}
+                        onQuantityUpdated={(newQuantity) =>
+                          handleQuantityUpdated(product.id, newQuantity)
+                        }
+                      />
+                      {user?.role === "ADMIN" && (
+                        <>
+                          <UpdateProduct
+                            product={product}
+                            onProductUpdated={handleProductUpdated}
+                          />
+                          <DeleteProduct
+                            productId={product.id}
+                            productName={product.name}
+                            onProductDeleted={handleProductDeleted}
+                          />
+                        </>
+                      )}
+                    </View>
                   </View>
                 </TouchableOpacity>
               </View>
