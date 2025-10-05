@@ -137,12 +137,12 @@ export default function QuantityDialog({
                   onChangeText={setAmount}
                   placeholder="0"
                   style={styles.input}
-                  placeholderTextColor="#6b7280"
+                  placeholderTextColor="#9ca3af"
                 />
               </View>
 
-              {/* Action Buttons */}
-              <View style={styles.buttonRow}>
+              {/* Action Buttons - Stacked */}
+              <View style={styles.buttonColumn}>
                 <TouchableOpacity
                   onPress={() => handleActionClick("increase")}
                   disabled={loading || !amount || parseInt(amount) <= 0}
@@ -153,8 +153,10 @@ export default function QuantityDialog({
                   ]}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.buttonText}>+ Increase</Text>
+                  <Feather name="arrow-up" size={18} color="#ffffff" />
+                  <Text style={styles.buttonText}>Increase Stock</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                   onPress={() => handleActionClick("decrease")}
                   disabled={loading || !amount || parseInt(amount) <= 0}
@@ -165,24 +167,27 @@ export default function QuantityDialog({
                   ]}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.buttonText}>- Decrease</Text>
+                  <Feather name="arrow-down" size={18} color="#ffffff" />
+                  <Text style={styles.buttonText}>Decrease Stock</Text>
                 </TouchableOpacity>
               </View>
 
               {/* Preview */}
               {amount && parseInt(amount) > 0 && (
                 <View style={styles.preview}>
-                  <Text style={styles.previewText}>
-                    New quantity will be:{" "}
-                    <Text style={styles.previewBold}>
-                      {currentQuantity + parseInt(amount)}
-                    </Text>{" "}
-                    (increase) or{" "}
-                    <Text style={styles.previewBold}>
-                      {Math.max(0, currentQuantity - parseInt(amount))}
-                    </Text>{" "}
-                    (decrease)
-                  </Text>
+                  <View style={styles.previewRow}>
+                    <Text style={styles.previewLabel}>If increased:</Text>
+                    <Text style={styles.previewValue}>
+                      {currentQuantity + parseInt(amount)} units
+                    </Text>
+                  </View>
+                  <View style={styles.previewDivider} />
+                  <View style={styles.previewRow}>
+                    <Text style={styles.previewLabel}>If decreased:</Text>
+                    <Text style={styles.previewValue}>
+                      {Math.max(0, currentQuantity - parseInt(amount))} units
+                    </Text>
+                  </View>
                 </View>
               )}
             </View>
@@ -216,33 +221,53 @@ export default function QuantityDialog({
             onPress={(e) => e.stopPropagation()}
           >
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Are you absolutely sure?</Text>
+              <Text style={styles.modalTitle}>Confirm Action</Text>
               <Text style={styles.modalDescription}>
                 You are about to{" "}
                 <Text style={styles.previewBold}>
                   {pendingAction === "increase" ? "increase" : "decrease"}
                 </Text>{" "}
                 the quantity by <Text style={styles.previewBold}>{amount}</Text>{" "}
-                units.{"\n\n"}
-                The new quantity will be:{" "}
-                <Text style={styles.previewBold}>{getNewQuantity()}</Text>{" "}
                 units.
               </Text>
+
+              <View style={styles.confirmPreview}>
+                <View style={styles.confirmRow}>
+                  <Text style={styles.confirmLabel}>Current quantity:</Text>
+                  <Text style={styles.confirmValue}>
+                    {currentQuantity} units
+                  </Text>
+                </View>
+
+                <View style={styles.confirmRow}>
+                  <Text style={styles.confirmLabel}>New quantity:</Text>
+                  <Text
+                    style={[
+                      styles.confirmValue,
+                      pendingAction === "increase"
+                        ? styles.increaseText
+                        : styles.decreaseText,
+                    ]}
+                  >
+                    {getNewQuantity()} units
+                  </Text>
+                </View>
+              </View>
             </View>
 
             <View style={styles.confirmFooter}>
               <TouchableOpacity
-                style={[styles.button, styles.buttonOutline]}
+                style={styles.cancelFooterButton}
                 onPress={() => setConfirmOpen(false)}
                 disabled={loading}
                 activeOpacity={0.7}
               >
-                <Text style={styles.buttonOutlineText}>Cancel</Text>
+                <Text style={styles.cancelFooterButtonText}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[
-                  styles.button,
+                  styles.confirmButton,
                   pendingAction === "increase"
                     ? styles.buttonPrimary
                     : styles.buttonDestructive,
@@ -252,7 +277,7 @@ export default function QuantityDialog({
                 disabled={loading}
                 activeOpacity={0.7}
               >
-                <Text style={styles.buttonPrimaryText}>
+                <Text style={styles.confirmButtonText}>
                   {loading ? "Updating..." : "Confirm"}
                 </Text>
               </TouchableOpacity>
@@ -273,39 +298,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  triggerButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#2563eb",
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
+    padding: 20,
   },
   modalContent: {
     backgroundColor: "#ffffff",
-    borderRadius: 12,
-    width: "90%",
+    borderRadius: 16,
+    width: "100%",
     maxWidth: 400,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
   confirmModalContent: {
     backgroundColor: "#ffffff",
-    borderRadius: 12,
-    width: "90%",
+    borderRadius: 16,
+    width: "100%",
     maxWidth: 400,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
   modalHeader: {
     padding: 24,
@@ -329,7 +354,7 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: 24,
-    gap: 16,
+    gap: 20,
   },
   inputContainer: {
     gap: 8,
@@ -340,37 +365,37 @@ const styles = StyleSheet.create({
     color: "#1f2937",
   },
   input: {
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: "#e5e7eb",
     backgroundColor: "#ffffff",
     color: "#1f2937",
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    fontSize: 18,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  buttonRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 8,
-  },
-  increaseButton: {
-    flex: 1,
-    backgroundColor: "#16a34a",
     paddingVertical: 14,
     borderRadius: 8,
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "left",
+  },
+  buttonColumn: {
+    gap: 12,
+  },
+  increaseButton: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#2563eb",
+    paddingVertical: 14,
+    borderRadius: 8,
   },
   decreaseButton: {
-    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
     backgroundColor: "#dc2626",
     paddingVertical: 14,
     borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
   },
   buttonText: {
     color: "#ffffff",
@@ -380,13 +405,29 @@ const styles = StyleSheet.create({
   preview: {
     backgroundColor: "#f9fafb",
     borderRadius: 8,
-    padding: 12,
-    marginTop: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
   },
-  previewText: {
+  previewRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  previewLabel: {
     fontSize: 14,
     color: "#6b7280",
-    lineHeight: 20,
+    fontWeight: "500",
+  },
+  previewValue: {
+    fontSize: 14,
+    color: "#1f2937",
+    fontWeight: "700",
+  },
+  previewDivider: {
+    height: 1,
+    backgroundColor: "#e5e7eb",
+    marginVertical: 12,
   },
   previewBold: {
     fontWeight: "700",
@@ -411,29 +452,69 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1f2937",
   },
-  confirmFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 24,
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    height: 44,
-    paddingHorizontal: 20,
+  confirmPreview: {
+    marginTop: 16,
+    backgroundColor: "#f9fafb",
     borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonOutline: {
-    backgroundColor: "#ffffff",
+    padding: 16,
+    gap: 8,
     borderWidth: 1,
     borderColor: "#e5e7eb",
   },
-  buttonOutlineText: {
-    fontSize: 16,
+  confirmRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  confirmLabel: {
+    fontSize: 14,
+    color: "#6b7280",
+    fontWeight: "500",
+  },
+  confirmValue: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#1f2937",
+  },
+  increaseText: {
+    color: "#2563eb",
+  },
+  decreaseText: {
+    color: "#dc2626",
+  },
+  confirmArrow: {
+    alignSelf: "center",
+  },
+  confirmFooter: {
+    flexDirection: "row",
+    padding: 24,
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+  },
+  cancelFooterButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelFooterButtonText: {
+    fontSize: 15,
     fontWeight: "600",
     color: "#1f2937",
+  },
+  confirmButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonPrimary: {
     backgroundColor: "#2563eb",
@@ -441,8 +522,8 @@ const styles = StyleSheet.create({
   buttonDestructive: {
     backgroundColor: "#dc2626",
   },
-  buttonPrimaryText: {
-    fontSize: 16,
+  confirmButtonText: {
+    fontSize: 15,
     fontWeight: "600",
     color: "#ffffff",
   },

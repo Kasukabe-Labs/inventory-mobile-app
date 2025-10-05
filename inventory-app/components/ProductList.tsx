@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Modal,
+  Pressable,
 } from "react-native";
 import { router } from "expo-router";
 import SearchBar from "./dashboard/searchBar";
@@ -55,6 +57,8 @@ export default function ProductList() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
+  const [barcodeModalVisible, setBarcodeModalVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const fetchProducts = async () => {
     try {
@@ -136,6 +140,16 @@ export default function ProductList() {
     );
   };
 
+  const handleBarcodePress = (product: Product) => {
+    setSelectedProduct(product);
+    setBarcodeModalVisible(true);
+  };
+
+  const closeBarcodeModal = () => {
+    setBarcodeModalVisible(false);
+    setSelectedProduct(null);
+  };
+
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -178,58 +192,87 @@ export default function ProductList() {
           </Text>
         </View>
 
-        {/* Product Grid */}
-        <View style={styles.grid}>
+        {/* Product List */}
+        <View style={styles.listContainer}>
           {filteredProducts.map((product) => {
             const stockStatus = getStockStatus(product.quantity);
 
             return (
-              <View key={product.id} style={styles.gridItem}>
-                <TouchableOpacity
-                  style={styles.productCard}
-                  activeOpacity={0.7}
-                >
-                  {/* Product Image */}
-                  <View style={styles.imageContainer}>
-                    <Image
-                      source={{ uri: product.imageUrl }}
-                      style={styles.productImage}
-                      resizeMode="cover"
-                    />
-
-                    {/* Stock Badge */}
-                    <View
-                      style={[
-                        styles.stockBadge,
-                        { backgroundColor: stockStatus.color },
-                      ]}
-                    >
-                      <Text style={styles.stockBadgeText}>
-                        {product.quantity}
-                      </Text>
-                    </View>
+              <View key={product.id} style={styles.productCard}>
+                {/* Product Image */}
+                <View style={styles.productImageWrapper}>
+                  <Image
+                    source={{ uri: product.imageUrl }}
+                    style={styles.productImage}
+                    resizeMode="cover"
+                  />
+                  <View
+                    style={[
+                      styles.stockBadge,
+                      { backgroundColor: stockStatus.color },
+                    ]}
+                  >
+                    <Text style={styles.stockBadgeText}>
+                      {product.quantity}
+                    </Text>
                   </View>
+                </View>
 
-                  {/* Product Info */}
-                  <View style={styles.productInfo}>
-                    <Text style={styles.categoryBadge}>
-                      {product.category.name}
-                    </Text>
-
-                    <Text style={styles.productName} numberOfLines={2}>
-                      {product.name}
-                    </Text>
-
-                    <View style={styles.priceRow}>
+                {/* Product Details */}
+                <View style={styles.productDetails}>
+                  <View style={styles.productHeader}>
+                    <View style={styles.productHeaderLeft}>
+                      <Text style={styles.categoryBadge}>
+                        {product.category.name}
+                      </Text>
+                      <Text style={styles.productName} numberOfLines={2}>
+                        {product.name}
+                      </Text>
+                      <Text style={styles.productSku}>SKU: #{product.sku}</Text>
+                    </View>
+                    <View style={styles.productHeaderRight}>
                       <Text style={styles.productPrice}>
                         {formatPrice(product.price)}
                       </Text>
-                      <Text style={styles.productSku}>#{product.sku}</Text>
+                      <View
+                        style={[
+                          styles.stockStatusBadge,
+                          { backgroundColor: `${stockStatus.color}15` },
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.stockStatusDot,
+                            { backgroundColor: stockStatus.color },
+                          ]}
+                        />
+                        <Text
+                          style={[
+                            styles.stockStatusText,
+                            { color: stockStatus.color },
+                          ]}
+                        >
+                          {stockStatus.text}
+                        </Text>
+                      </View>
                     </View>
+                  </View>
 
-                    {/* Action Buttons */}
+                  {/* Action Buttons */}
+                  <View style={styles.actionButtons}>
+                    <TouchableOpacity
+                      style={styles.actionButton}
+                      onPress={() => handleBarcodePress(product)}
+                      activeOpacity={0.7}
+                    >
+                      <MaterialIcons
+                        name="qr-code-2"
+                        size={16}
+                        color="#2563eb"
+                      />
+                    </TouchableOpacity>
 
-                    <View style={styles.actionButtons}>
+                    <View style={styles.actionButtonWrapper}>
                       <QuantityDialog
                         id={product.id}
                         currentQuantity={product.quantity}
@@ -237,22 +280,27 @@ export default function ProductList() {
                           handleQuantityUpdated(product.id, newQuantity)
                         }
                       />
-                      {user?.role === "ADMIN" && (
-                        <>
+                    </View>
+
+                    {user?.role === "ADMIN" && (
+                      <>
+                        <View style={styles.actionButtonWrapper}>
                           <UpdateProduct
                             product={product}
                             onProductUpdated={handleProductUpdated}
                           />
+                        </View>
+                        <View style={styles.actionButtonWrapper}>
                           <DeleteProduct
                             productId={product.id}
                             productName={product.name}
                             onProductDeleted={handleProductDeleted}
                           />
-                        </>
-                      )}
-                    </View>
+                        </View>
+                      </>
+                    )}
                   </View>
-                </TouchableOpacity>
+                </View>
               </View>
             );
           })}
@@ -261,6 +309,7 @@ export default function ProductList() {
         {/* Empty State */}
         {filteredProducts.length === 0 && (
           <View style={styles.emptyState}>
+            <MaterialIcons name="inventory-2" size={64} color="#e5e7eb" />
             <Text style={styles.emptyStateTitle}>No products found</Text>
             <Text style={styles.emptyStateSubtitle}>
               Try searching with SKU or title
@@ -270,6 +319,67 @@ export default function ProductList() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      {/* Barcode Modal */}
+      <Modal
+        visible={barcodeModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeBarcodeModal}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closeBarcodeModal}>
+          <Pressable
+            style={styles.modalContent}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderText}>
+                <Text style={styles.modalTitle} numberOfLines={2}>
+                  {selectedProduct?.name}
+                </Text>
+                <Text style={styles.modalSubtitle}>
+                  SKU: #{selectedProduct?.sku}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={closeBarcodeModal}
+                activeOpacity={0.7}
+              >
+                <Feather name="x" size={24} color="#6b7280" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Barcode Image */}
+            <View style={styles.barcodeImageContainer}>
+              {selectedProduct?.barcodeUrl ? (
+                <Image
+                  source={{ uri: selectedProduct.barcodeUrl }}
+                  style={styles.barcodeImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={styles.noBarcodeContainer}>
+                  <MaterialIcons name="qr-code-2" size={64} color="#e5e7eb" />
+                  <Text style={styles.noBarcodeText}>No barcode available</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Modal Footer */}
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.closeModalButton}
+                onPress={closeBarcodeModal}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.closeModalButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </>
   );
 }
@@ -279,7 +389,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
+    padding: 14,
   },
   loadingText: {
     marginTop: 16,
@@ -327,30 +437,28 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6b7280",
   },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: 10,
-  },
-  gridItem: {
-    width: "50%",
-    padding: 6,
+  listContainer: {
+    padding: 12,
+    gap: 12,
   },
   productCard: {
     backgroundColor: "#ffffff",
     borderRadius: 12,
+    flexDirection: "row",
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowRadius: 4,
     elevation: 2,
   },
-  imageContainer: {
-    width: "100%",
-    aspectRatio: 1,
-    backgroundColor: "#f3f4f6",
+  productImageWrapper: {
+    width: 120,
+    height: 140,
     position: "relative",
+    backgroundColor: "#f3f4f6",
   },
   productImage: {
     width: "100%",
@@ -363,17 +471,36 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
   },
   stockBadgeText: {
     color: "#ffffff",
     fontSize: 12,
     fontWeight: "700",
   },
-  productInfo: {
+  productDetails: {
+    flex: 1,
     padding: 12,
+    justifyContent: "space-between",
+  },
+  productHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  productHeaderLeft: {
+    flex: 1,
+    marginRight: 12,
+  },
+  productHeaderRight: {
+    alignItems: "flex-end",
   },
   categoryBadge: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "600",
     color: "#2563eb",
     backgroundColor: "#dbeafe",
@@ -381,36 +508,49 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
-    marginBottom: 8,
+    marginBottom: 6,
     textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   productName: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
     color: "#1f2937",
-    marginBottom: 8,
-    minHeight: 38,
-  },
-  priceRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  productPrice: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#1f2937",
+    marginBottom: 4,
+    lineHeight: 20,
   },
   productSku: {
     fontSize: 12,
-    fontWeight: "500",
     color: "#6b7280",
+    fontWeight: "500",
+  },
+  productPrice: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1f2937",
+    marginBottom: 6,
+  },
+  stockStatusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    gap: 4,
+  },
+  stockStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  stockStatusText: {
+    fontSize: 11,
+    fontWeight: "600",
   },
   actionButtons: {
     flexDirection: "row",
-    gap: 8,
-    marginTop: 4,
+    gap: 6,
+    flexWrap: "wrap",
   },
   actionButton: {
     flex: 1,
@@ -420,15 +560,24 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  actionButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#2563eb",
+  },
+  actionButtonWrapper: {
+    // Wrapper for dialog components
+  },
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 64,
+    paddingVertical: 80,
   },
   emptyStateTitle: {
     fontSize: 18,
     fontWeight: "600",
     color: "#1f2937",
+    marginTop: 16,
     marginBottom: 8,
   },
   emptyStateSubtitle: {
@@ -437,5 +586,87 @@ export const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 24,
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    width: "100%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
+  modalHeaderText: {
+    flex: 1,
+    marginRight: 12,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1f2937",
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+    fontWeight: "500",
+  },
+  closeButton: {
+    padding: 4,
+  },
+  barcodeImageContainer: {
+    padding: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 300,
+  },
+  barcodeImage: {
+    width: "100%",
+    height: 250,
+  },
+  noBarcodeContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 40,
+  },
+  noBarcodeText: {
+    fontSize: 14,
+    color: "#6b7280",
+    marginTop: 12,
+  },
+  modalFooter: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+  },
+  closeModalButton: {
+    backgroundColor: "#2563eb",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  closeModalButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
