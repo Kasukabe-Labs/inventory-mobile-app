@@ -59,7 +59,7 @@ export function SignInForm() {
         role: data.user.role,
         token: data.token,
       });
-      router.push("/(tabs)/inventory");
+      router.replace("/(tabs)/inventory");
     } catch (error) {
       console.error("Login error:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");

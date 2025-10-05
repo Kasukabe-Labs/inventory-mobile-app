@@ -1,29 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   StyleSheet,
   Pressable,
   Dimensions,
   Vibration,
+  Text,
+  ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { CameraView, Camera, BarcodeScanningResult } from "expo-camera";
-import { Text } from "@/components/ui/text";
-import { Button } from "@/components/ui/button";
-import { Icon } from "@/components/ui/icon";
-import {
-  X,
-  Scan,
-  CheckCircle2,
-  AlertCircle,
-  Flashlight,
-  FlashlightOff,
-} from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback } from "react";
+import Feather from "@expo/vector-icons/Feather";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 const SCAN_AREA_SIZE = width * 0.7;
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -61,16 +53,13 @@ export default function Scanner({
     requestCameraPermission();
   }, []);
 
-  // Reset scanner state when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      // Reset all states when screen is focused
       setScanned(false);
       setLoading(false);
       setProduct(null);
       setError(null);
 
-      // Cleanup when screen loses focus
       return () => {
         setScanned(false);
         setLoading(false);
@@ -97,23 +86,18 @@ export default function Scanner({
     Vibration.vibrate(100);
 
     try {
-      // Clean the scanned data - remove any extra whitespace
       let scannedCode = data.trim();
       console.log("Raw scanned barcode:", scannedCode, "Type:", type);
 
-      // Code128 can have encoding issues with special chars
-      // Try to clean up common misreads
       scannedCode = scannedCode
-        .replace(/\s+/g, "") // Remove all whitespace
-        .replace(/[^\x20-\x7E]/g, ""); // Remove non-printable characters
+        .replace(/\s+/g, "")
+        .replace(/[^\x20-\x7E]/g, "");
 
       console.log("Cleaned barcode:", scannedCode);
 
-      // Split by pipe character
       const parts = scannedCode.split("|");
 
       if (parts.length < 3) {
-        // If we can't parse as expected format, try to match just the SKU part
         console.log("Invalid format, trying direct SKU match");
         await tryDirectSKUMatch(scannedCode);
         return;
@@ -121,7 +105,6 @@ export default function Scanner({
 
       let [sku, priceStr, quantityStr] = parts;
 
-      // Clean each part
       sku = sku.trim();
       priceStr = priceStr.trim();
       quantityStr = quantityStr.trim();
@@ -131,25 +114,21 @@ export default function Scanner({
 
       console.log("Parsed - SKU:", sku, "Price:", price, "Quantity:", quantity);
 
-      // Fetch all products and find by SKU
       const response = await fetch(`${API_URL}/api/products/get-all`);
       const result = await response.json();
 
       if (result.success) {
-        // Try exact match first
         let foundProduct = result.data.find(
           (p: Product) =>
             p.sku && p.sku.trim().toUpperCase() === sku.toUpperCase()
         );
 
-        // If not found, try fuzzy matching (in case of scan errors)
         if (!foundProduct) {
           foundProduct = result.data.find((p: Product) => {
             if (!p.sku) return false;
             const productSku = p.sku.trim().toUpperCase();
             const scannedSku = sku.toUpperCase();
 
-            // Check if they're similar (allowing for some OCR errors)
             return (
               productSku.includes(scannedSku) || scannedSku.includes(productSku)
             );
@@ -161,13 +140,10 @@ export default function Scanner({
           setProduct(foundProduct);
           Vibration.vibrate([0, 100, 100, 100]);
 
-          // Call callback if provided
           onProductFound?.(foundProduct);
 
-          // Navigate to product page after a short delay
           setTimeout(() => {
             router.push(`/products/${foundProduct.id}`);
-            // Reset states after navigation
             setTimeout(() => {
               setProduct(null);
               setScanned(false);
@@ -256,8 +232,9 @@ export default function Scanner({
 
   if (hasPermission === null) {
     return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <Text className="text-muted-foreground">
+      <View style={styles.permissionContainer}>
+        <ActivityIndicator size="large" color="#2563eb" />
+        <Text style={styles.permissionText}>
           Requesting camera permission...
         </Text>
       </View>
@@ -266,23 +243,25 @@ export default function Scanner({
 
   if (hasPermission === false) {
     return (
-      <View className="flex-1 bg-background items-center justify-center p-6">
-        <Icon as={AlertCircle} size={64} className="text-destructive mb-4" />
-        <Text className="text-foreground text-xl font-bold mb-2 text-center">
-          Camera Permission Required
-        </Text>
-        <Text className="text-muted-foreground text-center mb-6">
+      <View style={styles.permissionContainer}>
+        <Feather name="alert-circle" size={64} color="#dc2626" />
+        <Text style={styles.permissionTitle}>Camera Permission Required</Text>
+        <Text style={styles.permissionSubtitle}>
           Please grant camera permission to scan barcodes
         </Text>
-        <Button onPress={requestCameraPermission}>
-          <Text>Grant Permission</Text>
-        </Button>
+        <TouchableOpacity
+          style={styles.permissionButton}
+          onPress={requestCameraPermission}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.permissionButtonText}>Grant Permission</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-black">
+    <View style={styles.container}>
       <CameraView
         style={StyleSheet.absoluteFillObject}
         facing="back"
@@ -293,22 +272,20 @@ export default function Scanner({
         enableTorch={flashEnabled}
       />
 
-      {/* All UI elements moved outside CameraView with absolute positioning */}
-
       {/* Header with Close Button */}
       <BlurView intensity={80} tint="dark" style={styles.header}>
-        <View className="flex-row items-center justify-between px-4 pt-12 pb-4">
-          <Pressable onPress={onClose} className="active:opacity-70">
-            <Icon as={X} size={28} color="white" />
+        <View style={styles.headerContent}>
+          <Pressable onPress={onClose} style={styles.headerButton}>
+            <Feather name="x" size={28} color="#ffffff" />
           </Pressable>
 
-          <Text className="text-white text-lg font-semibold">Scan Barcode</Text>
+          <Text style={styles.headerTitle}>Scan Barcode</Text>
 
-          <Pressable onPress={toggleFlash} className="active:opacity-70">
-            <Icon
-              as={flashEnabled ? Flashlight : FlashlightOff}
+          <Pressable onPress={toggleFlash} style={styles.headerButton}>
+            <Feather
+              name={flashEnabled ? "zap" : "zap-off"}
               size={24}
-              color="white"
+              color="#ffffff"
             />
           </Pressable>
         </View>
@@ -316,61 +293,43 @@ export default function Scanner({
 
       {/* Scanning Area Overlay */}
       <View style={styles.overlay}>
-        {/* Top Overlay */}
         <View style={styles.topOverlay} />
 
-        {/* Middle Row with Scan Area */}
         <View style={styles.middleRow}>
           <View style={styles.sideOverlay} />
 
-          {/* Scan Area */}
           <View style={styles.scanArea}>
-            {/* Corner Borders */}
             <View style={styles.cornerTopLeft} />
             <View style={styles.cornerTopRight} />
             <View style={styles.cornerBottomLeft} />
             <View style={styles.cornerBottomRight} />
 
-            {/* Scanning Line Animation - only show when actively scanning */}
             {!scanned && !loading && !product && (
               <View style={styles.scanLineContainer}>
                 <View style={styles.scanLine} />
               </View>
             )}
 
-            {/* Success State */}
             {product && (
               <View style={styles.resultContainer}>
-                <Icon as={CheckCircle2} size={64} color="#22c55e" />
-                <Text className="text-white text-xl font-bold mt-4 text-center">
-                  Product Found!
-                </Text>
-                <Text className="text-white/80 text-sm mt-2 text-center px-4">
-                  {product.name}
-                </Text>
-                <Text className="text-white/60 text-xs mt-2">
-                  Opening product...
-                </Text>
+                <Feather name="check-circle" size={64} color="#10b981" />
+                <Text style={styles.resultTitle}>Product Found!</Text>
+                <Text style={styles.resultSubtitle}>{product.name}</Text>
+                <Text style={styles.resultNote}>Opening product...</Text>
               </View>
             )}
 
-            {/* Error State */}
             {error && (
               <View style={styles.resultContainer}>
-                <Icon as={AlertCircle} size={64} color="#ef4444" />
-                <Text className="text-white text-xl font-bold mt-4 text-center px-4">
-                  {error}
-                </Text>
+                <Feather name="alert-circle" size={64} color="#dc2626" />
+                <Text style={styles.resultTitle}>{error}</Text>
               </View>
             )}
 
-            {/* Loading State */}
             {loading && !product && !error && (
               <View style={styles.resultContainer}>
-                <View className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin" />
-                <Text className="text-white text-lg font-semibold mt-4">
-                  Searching...
-                </Text>
+                <ActivityIndicator size="large" color="#ffffff" />
+                <Text style={styles.loadingText}>Searching...</Text>
               </View>
             )}
           </View>
@@ -378,18 +337,17 @@ export default function Scanner({
           <View style={styles.sideOverlay} />
         </View>
 
-        {/* Bottom Overlay */}
         <View style={styles.bottomOverlay} />
       </View>
 
       {/* Instructions at Bottom */}
       {!scanned && !loading && !product && !error && (
         <BlurView intensity={80} tint="dark" style={styles.instructions}>
-          <Icon as={Scan} size={32} color="white" className="mb-3" />
-          <Text className="text-white text-lg font-semibold mb-2">
+          <Feather name="maximize" size={32} color="#ffffff" />
+          <Text style={styles.instructionsTitle}>
             Position barcode in the frame
           </Text>
-          <Text className="text-white/70 text-sm text-center">
+          <Text style={styles.instructionsSubtitle}>
             Hold steady for best results
           </Text>
         </BlurView>
@@ -397,10 +355,14 @@ export default function Scanner({
 
       {/* Retry Button */}
       {scanned && !product && !loading && error && (
-        <View style={styles.retryButton}>
-          <Button onPress={resetScanner} variant="default" size="lg">
-            <Text className="text-lg">Scan Again</Text>
-          </Button>
+        <View style={styles.retryButtonContainer}>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={resetScanner}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.retryButtonText}>Scan Again</Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -408,12 +370,69 @@ export default function Scanner({
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#000000",
+  },
+  permissionContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+    backgroundColor: "#ffffff",
+  },
+  permissionText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6b7280",
+  },
+  permissionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1f2937",
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  permissionSubtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  permissionButton: {
+    backgroundColor: "#2563eb",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  permissionButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   header: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     zIndex: 10,
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 48,
+    paddingBottom: 16,
+  },
+  headerButton: {
+    padding: 4,
+  },
+  headerTitle: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "600",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -446,7 +465,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderTopWidth: 4,
     borderLeftWidth: 4,
-    borderColor: "white",
+    borderColor: "#ffffff",
     borderTopLeftRadius: 8,
   },
   cornerTopRight: {
@@ -457,7 +476,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderTopWidth: 4,
     borderRightWidth: 4,
-    borderColor: "white",
+    borderColor: "#ffffff",
     borderTopRightRadius: 8,
   },
   cornerBottomLeft: {
@@ -468,7 +487,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderBottomWidth: 4,
     borderLeftWidth: 4,
-    borderColor: "white",
+    borderColor: "#ffffff",
     borderBottomLeftRadius: 8,
   },
   cornerBottomRight: {
@@ -479,7 +498,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderBottomWidth: 4,
     borderRightWidth: 4,
-    borderColor: "white",
+    borderColor: "#ffffff",
     borderBottomRightRadius: 8,
   },
   scanLineContainer: {
@@ -490,8 +509,8 @@ const styles = StyleSheet.create({
   scanLine: {
     width: "100%",
     height: 2,
-    backgroundColor: "#22c55e",
-    shadowColor: "#22c55e",
+    backgroundColor: "#10b981",
+    shadowColor: "#10b981",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
     shadowRadius: 10,
@@ -499,6 +518,36 @@ const styles = StyleSheet.create({
   bottomOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
+  resultContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  resultTitle: {
+    color: "#ffffff",
+    fontSize: 20,
+    fontWeight: "700",
+    marginTop: 16,
+    textAlign: "center",
+  },
+  resultSubtitle: {
+    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: "center",
+    paddingHorizontal: 16,
+  },
+  resultNote: {
+    color: "rgba(255, 255, 255, 0.6)",
+    fontSize: 12,
+    marginTop: 8,
+  },
+  loadingText: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "600",
+    marginTop: 16,
   },
   instructions: {
     position: "absolute",
@@ -510,17 +559,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
     zIndex: 5,
   },
-  resultContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+  instructionsTitle: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "600",
+    marginTop: 12,
+    marginBottom: 8,
   },
-  retryButton: {
+  instructionsSubtitle: {
+    color: "rgba(255, 255, 255, 0.7)",
+    fontSize: 14,
+    textAlign: "center",
+  },
+  retryButtonContainer: {
     position: "absolute",
     bottom: 60,
     left: 20,
     right: 20,
     alignItems: "center",
     zIndex: 5,
+  },
+  retryButton: {
+    backgroundColor: "#2563eb",
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 8,
+    width: "100%",
+    alignItems: "center",
+  },
+  retryButtonText: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "600",
   },
 });
