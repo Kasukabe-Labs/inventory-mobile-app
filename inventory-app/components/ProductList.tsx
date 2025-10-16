@@ -11,6 +11,7 @@ import {
   Modal,
   Pressable,
   useColorScheme,
+  Animated,
 } from "react-native";
 import { router } from "expo-router";
 import SearchBar from "./dashboard/searchBar";
@@ -22,6 +23,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { UpdateProduct } from "./dashboard/updateProductDialog";
 import { DeleteProduct } from "./dashboard/deleteProduct";
 import QuantityDialog from "./Quantity";
+import { SkeletonLoader } from "./SkeletonLoader";
 
 interface Category {
   id: string;
@@ -163,12 +165,7 @@ export default function ProductList() {
   };
 
   if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Loading products...</Text>
-      </View>
-    );
+    return <SkeletonLoader />;
   }
 
   if (error) {
