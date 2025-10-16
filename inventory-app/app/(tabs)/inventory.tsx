@@ -1,7 +1,8 @@
+// Inventory.js
+import React, { useState } from "react";
+import { ScrollView, RefreshControl, StyleSheet } from "react-native";
 import Header from "@/components/dashboard/header";
 import ProductList from "@/components/ProductList";
-import { useState } from "react";
-import { ScrollView, RefreshControl } from "react-native";
 
 export default function Inventory() {
   const [refreshing, setRefreshing] = useState(false);
@@ -16,7 +17,8 @@ export default function Inventory() {
 
   return (
     <ScrollView
-      className="flex-1 bg-background"
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -28,3 +30,15 @@ export default function Inventory() {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  // main scroll view container
+  container: {
+    flex: 1,
+    backgroundColor: "#ffffff", // bgColor ffffff
+  },
+  // ensures content can grow and stretch when content is small
+  contentContainer: {
+    flexGrow: 1,
+  },
+});

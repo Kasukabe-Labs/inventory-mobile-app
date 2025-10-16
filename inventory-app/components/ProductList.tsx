@@ -10,6 +10,7 @@ import {
   Alert,
   Modal,
   Pressable,
+  useColorScheme,
 } from "react-native";
 import { router } from "expo-router";
 import SearchBar from "./dashboard/searchBar";
@@ -46,6 +47,17 @@ interface ApiResponse {
 }
 
 export default function ProductList() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  const theme = {
+    background: isDark ? "#0f172a" : "#ffffff",
+    card: isDark ? "#1e293b" : "#ffffff",
+    textPrimary: isDark ? "#f1f5f9" : "#1f2937",
+    textSecondary: isDark ? "#94a3b8" : "#6b7280",
+    border: isDark ? "#334155" : "#e5e7eb",
+  };
+
   const user = useAuthStore((state) => state.user);
   const setCategories = useCategoryStore((state) => state.setCategories);
 

@@ -21,11 +21,10 @@ type CategoryStats = {
   count: number;
   value: number;
 };
+const colorScheme = useColorScheme();
+const isDark = colorScheme === "dark";
 
 const AnalyticsDashboard = () => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -126,7 +125,10 @@ const AnalyticsDashboard = () => {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[
+        styles.container,
+        { backgroundColor: isDark ? "#000000" : "#ffffff" },
+      ]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -153,7 +155,12 @@ const AnalyticsDashboard = () => {
           </View>
 
           <View style={styles.metricsRow}>
-            <View style={styles.metricCard}>
+            <View
+              style={[
+                styles.metricCard,
+                { backgroundColor: isDark ? "#1f2937" : "#ffffff" },
+              ]}
+            >
               <Text
                 style={[styles.metricLabelSmall, isDark && styles.textDark]}
               >
@@ -189,7 +196,12 @@ const AnalyticsDashboard = () => {
         </View>
 
         {/* Top 5 Products - FIXED BAR CHART */}
-        <View style={styles.chartCard}>
+        <View
+          style={[
+            styles.chartCard,
+            { backgroundColor: isDark ? "#1f2937" : "#ffffff" },
+          ]}
+        >
           <Text style={[styles.chartTitle, isDark && styles.textDark]}>
             🏆 Top 5 Products
           </Text>
@@ -298,7 +310,7 @@ const AnalyticsDashboard = () => {
             <PieChart
               data={categoryData}
               radius={90}
-              textColor="#ffffff"
+              textColor={isDark ? "#000000" : "#ffffff"}
               textSize={12}
               fontWeight="bold"
               showText
@@ -339,11 +351,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#ffffff",
+    backgroundColor: isDark ? "#000000" : "#ffffff",
   },
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: isDark ? "#000000" : "#ffffff",
   },
   content: {
     marginTop: 64,

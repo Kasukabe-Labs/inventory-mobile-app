@@ -12,8 +12,12 @@ import React, { useState } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAuthStore } from "@/store/useAuthStore";
 import { router } from "expo-router";
+import { useColorScheme } from "react-native";
 
 export default function Header() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
   const user = useAuthStore((state) => state.user);
   const clearUser = useAuthStore((state) => state.clearUser);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -33,7 +37,15 @@ export default function Header() {
 
   return (
     <>
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: isDark ? "#0f172a" : "#ffffff",
+            borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+          },
+        ]}
+      >
         {/* Left Section: Avatar + User Info */}
         <View style={styles.leftSection}>
           <View style={styles.avatar}>
