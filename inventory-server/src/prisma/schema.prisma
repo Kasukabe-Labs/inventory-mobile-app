@@ -1,4 +1,4 @@
-// prisma/schema.prisma
+//schema.prisma
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -16,6 +16,9 @@ model User {
   role      Role     @default(EMPLOYEE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // 🔁 relation: one user can have many history logs
+  historyLogs HistoryLog[]
 }
 
 model Product {
@@ -30,6 +33,9 @@ model Product {
   barcodeUrl String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  // 🔁 relation: one product can appear in many logs
+  historyLogs HistoryLog[]
 }
 
 model Category {
@@ -43,4 +49,34 @@ model Category {
 enum Role {
   ADMIN
   EMPLOYEE
+}
+
+model Settings {
+  id            String   @id @default(cuid())
+  stockHigh     Int      @default(100) // above = "In Stock"
+  stockModerate Int      @default(50) // below this = "Moderate Stock"
+  stockLow      Int      @default(20) // below this = "Low Stock"
+  updatedAt     DateTime @updatedAt
+}
+
+model HistoryLog {
+  id          String        @id @default(cuid())
+  productId   String?
+  product     Product?      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?         @relation(fields: [userId], references: [id])
+  action      HistoryAction
+  details     String
+  oldQuantity Int?
+  newQuantity Int?
+  createdAt   DateTime      @default(now())
+}
+
+enum HistoryAction {
+  PRODUCT_ADDED
+  PRODUCT_EDITED
+  PRODUCT_DELETED
+  STOCK_INCREASED
+  STOCK_DECREASED
+  CATEGORY_DELETED
 }

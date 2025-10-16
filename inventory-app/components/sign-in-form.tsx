@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
@@ -143,9 +144,15 @@ export function SignInForm() {
                 onPress={onSubmit}
                 disabled={loading}
               >
-                <Text style={styles.submitButtonText}>
-                  {loading ? "Loading..." : "Continue"}
-                </Text>
+                {loading ? (
+                  <ActivityIndicator
+                    size="small"
+                    color="#ffffff"
+                    animating={true}
+                  />
+                ) : (
+                  <Text style={styles.submitButtonText}>Continue</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>

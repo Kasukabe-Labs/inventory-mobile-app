@@ -9,7 +9,7 @@ import { CategoryRouter } from "./routes/category.route.js";
 const app = express();
 app.use(express.json());
 
-morgan("dev");
+app.use(morgan("dev"));
 
 app.get("/", (req, res) => {
   res.send("Hi there");

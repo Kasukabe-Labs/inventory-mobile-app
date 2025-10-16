@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { signJwt } from "../lib/jwt.js";
 
 async function LoginController(req: Request, res: Response) {
+  console.time("Total Login");
   try {
     const { email, password } = req.body;
 
@@ -13,29 +14,32 @@ async function LoginController(req: Request, res: Response) {
         .json({ message: "Email and password are required" });
     }
 
-    // 1. Find user
+    console.time("1. Prisma findUnique");
     const user = await prisma.user.findUnique({
       where: { email },
     });
+    console.timeEnd("1. Prisma findUnique");
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // 2. Compare password
+    console.time("2. bcrypt.compare");
     const isMatch = await bcrypt.compare(password, user.password);
+    console.timeEnd("2. bcrypt.compare");
+
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // 3. Sign JWT
+    console.time("3. signJwt");
     const token = await signJwt({
       id: user.id.toString(),
       email: user.email,
       role: user.role as "ADMIN" | "EMPLOYEE",
     });
+    console.timeEnd("3. signJwt");
 
-    // 4. Send response
     res.json({
       message: "Login successful",
       token,
@@ -48,6 +52,8 @@ async function LoginController(req: Request, res: Response) {
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Internal server error" });
+  } finally {
+    console.timeEnd("Total Login");
   }
 }
 
