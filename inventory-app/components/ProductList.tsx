@@ -187,10 +187,18 @@ export default function ProductList() {
                 {/* Product Image */}
                 <View style={styles.productImageWrapper}>
                   <Image
-                    source={{ uri: product.imageUrl }}
+                    source={
+                      !product.imageUrl ||
+                      product.imageUrl.includes(
+                        "https://example-bucket.s3.amazonaws.com/images/"
+                      )
+                        ? require("../assets/images/def.jpg") // default image
+                        : { uri: product.imageUrl } // actual product image
+                    }
                     style={styles.productImage}
                     resizeMode="cover"
                   />
+
                   <View
                     style={[
                       styles.stockBadge,
