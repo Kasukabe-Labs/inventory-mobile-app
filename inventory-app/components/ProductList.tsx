@@ -468,13 +468,16 @@ export const styles = StyleSheet.create({
   },
   productImageWrapper: {
     width: 120,
-    height: 140,
-    position: "relative",
+    height: 160,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+    overflow: "hidden",
     backgroundColor: "#f3f4f6",
   },
   productImage: {
     width: "100%",
     height: "100%",
+    resizeMode: "cover",
   },
   stockBadge: {
     position: "absolute",
@@ -578,7 +581,7 @@ export const styles = StyleSheet.create({
     color: "#2563eb",
   },
   actionButtonWrapper: {
-    // Wrapper for dialog components
+    flex: 1,
   },
   emptyState: {
     alignItems: "center",
