@@ -21,13 +21,13 @@ type CategoryStats = {
   count: number;
   value: number;
 };
-const colorScheme = useColorScheme();
-const isDark = colorScheme === "dark";
 
 const AnalyticsDashboard = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const fetchProducts = async () => {
     try {
@@ -351,11 +351,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: isDark ? "#000000" : "#ffffff",
+    backgroundColor: "#ffffff",
   },
   container: {
     flex: 1,
-    backgroundColor: isDark ? "#000000" : "#ffffff",
+    backgroundColor: "#ffffff",
   },
   content: {
     marginTop: 64,
@@ -394,7 +394,8 @@ const styles = StyleSheet.create({
   },
   metricsRow: {
     flexDirection: "row",
-    gap: 12,
+    padding: 14,
+    gap: 6,
   },
   metricCard: {
     flex: 1,

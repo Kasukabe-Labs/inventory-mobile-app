@@ -47,4 +47,6 @@ ProductRouter.patch("/updateQty", authenticate, updateProductQuantity);
 // ✅ Only ADMIN can delete products
 ProductRouter.delete("/delete", authenticate, isAdmin, deleteProduct);
 
+ProductRouter.get("/product/:id", authenticate, isAdmin, getSingleProductByID);
+
 export default ProductRouter;
