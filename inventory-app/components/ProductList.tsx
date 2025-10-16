@@ -13,7 +13,6 @@ import {
   useColorScheme,
   Animated,
 } from "react-native";
-import { router } from "expo-router";
 import SearchBar from "./dashboard/searchBar";
 import { useAuthStore } from "@/store/useAuthStore";
 import { API_URL } from "@/constants/api";
@@ -24,29 +23,8 @@ import { UpdateProduct } from "./dashboard/updateProductDialog";
 import { DeleteProduct } from "./dashboard/deleteProduct";
 import QuantityDialog from "./Quantity";
 import { SkeletonLoader } from "./SkeletonLoader";
-
-interface Category {
-  id: string;
-  name: string;
-}
-
-export interface Product {
-  id: string;
-  name: string;
-  sku: string;
-  quantity: number;
-  price: string;
-  imageUrl: string;
-  barcodeUrl: string;
-  category: Category;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface ApiResponse {
-  success: boolean;
-  data: Product[];
-}
+import { useQueryClient } from "@tanstack/react-query";
+import { useProducts, Product, Category } from "@/hooks/useProducts";
 
 export default function ProductList() {
   const colorScheme = useColorScheme();
@@ -63,9 +41,6 @@ export default function ProductList() {
   const user = useAuthStore((state) => state.user);
   const setCategories = useCategoryStore((state) => state.setCategories);
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
@@ -74,32 +49,14 @@ export default function ProductList() {
   const [barcodeModalVisible, setBarcodeModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/products/get-all`);
-      const data: ApiResponse = await response.json();
+  const queryClient = useQueryClient();
 
-      if (data.success) {
-        setProducts(data.data);
-        const uniqueCategories: Category[] = Array.from(
-          new Map(data.data.map((p) => [p.category.id, p.category])).values()
-        );
-        setCategories(uniqueCategories);
-        setError(null);
-      } else {
-        setError("Failed to load products");
-      }
-    } catch (err) {
-      setError("Unable to connect to server");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  const {
+    data: products = [],
+    isLoading: loading,
+    error,
+    refetch,
+  } = useProducts();
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -108,6 +65,15 @@ export default function ProductList() {
 
     return () => clearTimeout(handler);
   }, [searchQuery]);
+
+  useEffect(() => {
+    if (products && products.length > 0) {
+      const uniqueCategories: Category[] = Array.from(
+        new Map(products.map((p) => [p.category.id, p.category])).values()
+      );
+      setCategories(uniqueCategories);
+    }
+  }, [products, setCategories]);
 
   const formatPrice = (price: string) => {
     return `₹${parseFloat(price).toLocaleString("en-IN")}`;
@@ -137,21 +103,27 @@ export default function ProductList() {
   };
 
   const handleProductUpdated = () => {
-    fetchProducts();
+    queryClient.invalidateQueries({ queryKey: ["products"] });
   };
 
   const handleProductDeleted = () => {
-    fetchProducts();
+    queryClient.invalidateQueries({ queryKey: ["products"] });
   };
 
+  // Keep handleQuantityUpdated as is for optimistic updates, but add:
   const handleQuantityUpdated = (productId: string, newQuantity: number) => {
-    setProducts((prevProducts) =>
-      prevProducts.map((product) =>
+    // Optimistic update
+    queryClient.setQueryData(["products"], (oldData: Product[] | undefined) => {
+      if (!oldData) return oldData;
+      return oldData.map((product) =>
         product.id === productId
           ? { ...product, quantity: newQuantity }
           : product
-      )
-    );
+      );
+    });
+
+    // Invalidate to refetch in background
+    queryClient.invalidateQueries({ queryKey: ["products"] });
   };
 
   const handleBarcodePress = (product: Product) => {
@@ -172,8 +144,12 @@ export default function ProductList() {
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.errorTitle}>Error</Text>
-        <Text style={styles.errorMessage}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchProducts}>
+        <Text style={styles.errorMessage}>
+          {error instanceof Error
+            ? error.message
+            : "Unable to connect to server"}
+        </Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
